@@ -1,6 +1,6 @@
 ﻿namespace ProductManager
 {
-    class Product
+    public class Product
     {
         public string articleNumber;
 

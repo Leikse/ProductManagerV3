@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using static System.Console;
 
@@ -7,11 +8,12 @@ namespace ProductManager
 {
     class Program
     {
+        static Dictionary<string, Product> productDictionary = new Dictionary<string, Product>();
+        static List<Category> categoryList = new List<Category>();
+
         static void Main(string[] args)
         {
-            Dictionary<string, Product> productDictionary = new Dictionary<string, Product>();
-
-            bool isRunning = true;
+            var isRunning = true;
 
             do
             {
@@ -19,8 +21,13 @@ namespace ProductManager
 
                 WriteLine("1. Add product");
                 WriteLine("2. Search product");
-                WriteLine("3. Exit");
+                WriteLine("3. Add category");
+                WriteLine("4. Add product to category");
+                WriteLine("5. List categories");
+                WriteLine("6. Exit");
 
+
+                // Gör till en egen metod fram till rad 45
                 ConsoleKeyInfo userInput;
 
                 bool invalidChoice;
@@ -31,7 +38,10 @@ namespace ProductManager
 
                     invalidChoice = !(userInput.Key == ConsoleKey.D1 || userInput.Key == ConsoleKey.NumPad1
                                    || userInput.Key == ConsoleKey.D2 || userInput.Key == ConsoleKey.NumPad2
-                                   || userInput.Key == ConsoleKey.D3 || userInput.Key == ConsoleKey.NumPad3);
+                                   || userInput.Key == ConsoleKey.D3 || userInput.Key == ConsoleKey.NumPad3
+                                   || userInput.Key == ConsoleKey.D4 || userInput.Key == ConsoleKey.NumPad4
+                                   || userInput.Key == ConsoleKey.D5 || userInput.Key == ConsoleKey.NumPad5
+                                   || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6);
 
                 } while (invalidChoice);
 
@@ -42,34 +52,52 @@ namespace ProductManager
                 switch (userInput.Key)
                 {
                     case ConsoleKey.D1:
-
                     case ConsoleKey.NumPad1:
                         {
-                            AddProduct(productDictionary);
+                            AddProduct();
                         }
                         break;
 
                     case ConsoleKey.D2:
-
                     case ConsoleKey.NumPad2:
                         {
-                            ListProduct(productDictionary);
+                            ListProduct();
                         }
                         break;
 
                     case ConsoleKey.D3:
-
                     case ConsoleKey.NumPad3:
+                        {
+                            AddCategory();
+                        }
+                        break;
 
-                        isRunning = false;
+                    case ConsoleKey.D4:
+                    case ConsoleKey.NumPad4:
+                        {
+                            AddCategoryToProduct();
+                        }
+                        break;
 
+                    case ConsoleKey.D5:
+                    case ConsoleKey.NumPad5:
+                        {
+                            ListCategories();
+                        }
+                        break;
+
+                    case ConsoleKey.D6:
+                    case ConsoleKey.NumPad6:
+                        {
+                            isRunning = false;
+                        }
                         break;
                 }
             } 
             while (isRunning);
         }
 
-        static void AddProduct(Dictionary<string, Product> productDictionary)
+        static void AddProduct()
         {
             Product product = CreateProduct();
 
@@ -90,7 +118,7 @@ namespace ProductManager
             }
             while (invalidChoice);
 
-            bool productNotExists = !productDictionary.ContainsKey(product.articleNumber);
+            var productNotExists = !productDictionary.ContainsKey(product.articleNumber);
 
             Clear();
 
@@ -108,7 +136,6 @@ namespace ProductManager
 
                 Thread.Sleep(2000);
             }
-
             CursorVisible = true;
 
             Clear();
@@ -147,48 +174,178 @@ namespace ProductManager
             return product;
         }
 
-        static void ListProduct(Dictionary<string, Product> productDictionary)
+        static void AddCategory()
         {
-            WriteLine("Article number: ");
+            var isRunning = true;
 
-            var ArticleNumber = ReadLine();
+            Category category = CreateCategory();
 
-            bool productExists = productDictionary.ContainsKey(ArticleNumber);
+            do
+            {
+                WriteLine("Is this correct? (Y)es (N)o");
 
-            bool invalidChoice;
+                CursorVisible = false;
+
+                ConsoleKeyInfo input;
+
+                bool invalidChoice;
+
+                do
+                {
+                    input = ReadKey(true);
+
+                    invalidChoice = !(input.Key == ConsoleKey.Y || input.Key == ConsoleKey.N);
+
+                }
+                while (invalidChoice);
+
+                Clear();
+
+                if (input.Key == ConsoleKey.Y)
+                {
+                    categoryList.Add(category);
+
+                    WriteLine("Category added");
+
+                    Thread.Sleep(2000);
+
+                    isRunning = false;
+                }
+                else
+                {
+                    isRunning = false;
+                }
+                Clear();
+
+            } while (isRunning);
+        }
+
+        static Category CreateCategory()
+        {
+            Write("Name: ");
+
+            var name = ReadLine();
+
+            Write("Description: ");
+
+            var description = ReadLine();
+
+            Write("Image URL: ");
+
+            var url = ReadLine();
+
+            Category category = new Category
+            {
+                name = name,
+                description = description,
+                url = url,
+            };
+            return category;
+        }
+
+        static void ListProduct()
+        {
+            Write("Article number: ");
+
+            var articleNumber = ReadLine();
+
+            Clear();
+
+            var productExists = productDictionary.ContainsKey(articleNumber);
 
             if (productExists)
             {
-                foreach (var product in productDictionary.Values)
+                var product = productDictionary[articleNumber];
+
+                WriteLine($"Article number: {product.articleNumber}");
+                WriteLine($"Name: {product.name}");
+                WriteLine($"Description: {product.description}");
+                WriteLine($"Url: {product.url}");
+                WriteLine($"Price: {product.price}");
+
+                CursorVisible = false;
+
+                while (ReadKey(true).Key != ConsoleKey.Escape);
+            }
+            else
+            {
+                CursorVisible = false;
+
+                WriteLine("Product not found");
+
+                Thread.Sleep(2000);
+            }
+            Clear();
+        }
+
+        static void AddCategoryToProduct()
+        {
+            Write("Article number: ");
+
+            var articleNumber = ReadLine();
+
+            Clear();
+
+            var productExists = productDictionary.ContainsKey(articleNumber);
+
+            if (productExists)
+            {
+                WriteLine("Category name: ");
+
+                var name = ReadLine();
+
+                var categoryExists = categoryList.Any(category => category.name == name);
+
+                Clear();
+
+                CursorVisible = false;
+
+                if (categoryExists)
                 {
-                    WriteLine($"Article number: {product.articleNumber}");
-                    WriteLine($"Name: {product.name}");
-                    WriteLine($"Description: {product.description}");
-                    WriteLine($"Url: {product.url}");
-                    WriteLine($"Price: {product.price}");
+                    WriteLine("Product added to category");
 
-                    CursorVisible = false;
+                    Thread.Sleep(2000);
+                }
+                else
+                {
+                    WriteLine("Category not found");
 
-                    ConsoleKeyInfo input;
-
-                    do
-                    {
-                        input = ReadKey(true);
-
-                        invalidChoice = !(input.Key == ConsoleKey.Escape);
-
-                    }
-                    while (invalidChoice);
+                    Thread.Sleep(2000);
                 }
             }
             else
             {
-                Clear();
                 CursorVisible = false;
 
                 WriteLine("Product not found");
+
                 Thread.Sleep(2000);
             }
+            Clear();
+        }
+
+        static void ListCategories()
+        {
+            CursorVisible = false;
+
+            WriteLine("Name\t\t\t\tPrice");
+            WriteLine("------------------------------------------------------------------------------");
+
+            categoryList.ForEach(product =>
+            {
+                WriteLine($"{product.name} ({product.})");
+            });
+
+            //foreach (var category in categoryList)
+            //{
+            //    WriteLine($"{category.name}  ({})");
+
+                
+            //}
+            
+
+
+            while (ReadKey(true).Key != ConsoleKey.Escape);
 
             Clear();
         }
