@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using static System.Console;
 
@@ -27,7 +28,7 @@ namespace ProductManager
                 WriteLine("6. Exit");
 
 
-                // Gör till en egen metod fram till rad 45
+                // TODO: Do this to an method
                 ConsoleKeyInfo userInput;
 
                 bool invalidChoice;
@@ -75,7 +76,7 @@ namespace ProductManager
                     case ConsoleKey.D4:
                     case ConsoleKey.NumPad4:
                         {
-                            AddCategoryToProduct();
+                            AddProductToCategory();
                         }
                         break;
 
@@ -173,6 +174,90 @@ namespace ProductManager
             };
             return product;
         }
+        static void ListProduct()
+        {
+            Write("Article number: ");
+
+            var articleNumber = ReadLine();
+
+            Clear();
+
+            var productExists = productDictionary.ContainsKey(articleNumber);
+
+            var isRunning = true;
+
+            ConsoleKeyInfo input;
+
+            bool invalidChoice;
+
+            do
+            {
+                input = ReadKey(true);
+
+                invalidChoice = !(input.Key == ConsoleKey.Escape || input.Key == ConsoleKey.D);
+
+            }
+            while (invalidChoice);
+
+            do
+            {
+                if (productExists && input.Key == ConsoleKey.D)
+                {
+                    var product = productDictionary[articleNumber];
+
+                    WriteLine($"Article number: {product.articleNumber}");
+                    WriteLine($"Name: {product.name}");
+                    WriteLine($"Description: {product.description}");
+                    WriteLine($"Url: {product.url}");
+                    WriteLine($"Price: {product.price}");
+                    WriteLine("\n(D)elete");
+
+                    CursorVisible = false;
+
+                    ConsoleKeyInfo inputAgain;
+
+                    bool invalidChoiceAgain;
+
+                    do
+                    {
+                        inputAgain = ReadKey(true);
+
+                        invalidChoiceAgain = !(inputAgain.Key == ConsoleKey.Y || inputAgain.Key == ConsoleKey.N);
+
+                    }
+                    while (invalidChoiceAgain);
+
+                    switch (inputAgain.Key)
+                    {
+                        // GÖR INGENTING JUST NU------------------------------------------------------------------------------------------------------------
+                        case ConsoleKey.D:
+                            WriteLine($"Article number: {product.articleNumber}");
+                            WriteLine($"Name: {product.name}");
+                            WriteLine($"Description: {product.description}");
+                            WriteLine($"Url: {product.url}");
+                            WriteLine($"Price: {product.price}");
+                            WriteLine("\nAre you sure you want to delete? (Y)es (N)o");
+                            break;
+
+                        case ConsoleKey.Escape:
+
+
+                            break;
+                    }
+
+                }
+                else
+                {
+                    CursorVisible = false;
+
+                    WriteLine("Product not found");
+
+                    Thread.Sleep(2000);
+                }
+                Clear();
+
+            } while (isRunning);
+        }
 
         static void AddCategory()
         {
@@ -243,50 +328,15 @@ namespace ProductManager
             return category;
         }
 
-        static void ListProduct()
+        static void AddProductToCategory()
         {
             Write("Article number: ");
 
-            var articleNumber = ReadLine();
+            var ArticleNumber = ReadLine();
 
             Clear();
 
-            var productExists = productDictionary.ContainsKey(articleNumber);
-
-            if (productExists)
-            {
-                var product = productDictionary[articleNumber];
-
-                WriteLine($"Article number: {product.articleNumber}");
-                WriteLine($"Name: {product.name}");
-                WriteLine($"Description: {product.description}");
-                WriteLine($"Url: {product.url}");
-                WriteLine($"Price: {product.price}");
-
-                CursorVisible = false;
-
-                while (ReadKey(true).Key != ConsoleKey.Escape);
-            }
-            else
-            {
-                CursorVisible = false;
-
-                WriteLine("Product not found");
-
-                Thread.Sleep(2000);
-            }
-            Clear();
-        }
-
-        static void AddCategoryToProduct()
-        {
-            Write("Article number: ");
-
-            var articleNumber = ReadLine();
-
-            Clear();
-
-            var productExists = productDictionary.ContainsKey(articleNumber);
+            var productExists = productDictionary.ContainsKey(ArticleNumber);
 
             if (productExists)
             {
@@ -302,6 +352,12 @@ namespace ProductManager
 
                 if (categoryExists)
                 {
+                    var productToAdd = productDictionary.SingleOrDefault(x => x.Value.articleNumber == ArticleNumber);
+
+                    var categoryToAddTo = categoryList.SingleOrDefault(x => x.name == name);
+
+                    categoryToAddTo.productList.Add(productToAdd.Key, productToAdd.Value);
+
                     WriteLine("Product added to category");
 
                     Thread.Sleep(2000);
@@ -328,22 +384,19 @@ namespace ProductManager
         {
             CursorVisible = false;
 
-            WriteLine("Name\t\t\t\tPrice");
+            WriteLine("Name\t\tPrice");
             WriteLine("------------------------------------------------------------------------------");
 
-            categoryList.ForEach(product =>
+            categoryList.ForEach(category =>
             {
-                WriteLine($"{product.name} ({product.})");
+                var numberOfProducts = category.productList != null ? category.productList.Count().ToString() : "";
+
+                foreach (var product in category.productList)
+                {
+                    WriteLine($"{category.name} ({numberOfProducts})");
+                    WriteLine($"  {product.Value.name}\t\t{product.Value.price}");
+                }
             });
-
-            //foreach (var category in categoryList)
-            //{
-            //    WriteLine($"{category.name}  ({})");
-
-                
-            //}
-            
-
 
             while (ReadKey(true).Key != ConsoleKey.Escape);
 

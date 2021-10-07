@@ -10,6 +10,6 @@ namespace ProductManager
 
         public string url;
 
-        public Dictionary<string, Product> productList;
+        public Dictionary<string, Product> productList = new Dictionary<string, Product>();
     }
 }
