@@ -186,65 +186,103 @@ namespace ProductManager
 
             var isRunning = true;
 
-            ConsoleKeyInfo input;
-
-            bool invalidChoice;
-
             do
             {
-                input = ReadKey(true);
-
-                invalidChoice = !(input.Key == ConsoleKey.Escape || input.Key == ConsoleKey.D);
-
-            }
-            while (invalidChoice);
-
-            do
-            {
-                if (productExists && input.Key == ConsoleKey.D)
+                if (productExists)
                 {
-                    var product = productDictionary[articleNumber];
-
-                    WriteLine($"Article number: {product.articleNumber}");
-                    WriteLine($"Name: {product.name}");
-                    WriteLine($"Description: {product.description}");
-                    WriteLine($"Url: {product.url}");
-                    WriteLine($"Price: {product.price}");
-                    WriteLine("\n(D)elete");
-
-                    CursorVisible = false;
-
-                    ConsoleKeyInfo inputAgain;
-
-                    bool invalidChoiceAgain;
+                    bool isRunningAgain = true;
 
                     do
                     {
-                        inputAgain = ReadKey(true);
+                        var product = productDictionary[articleNumber];
 
-                        invalidChoiceAgain = !(inputAgain.Key == ConsoleKey.Y || inputAgain.Key == ConsoleKey.N);
+                        WriteLine($"Article number: {product.articleNumber}");
+                        WriteLine($"Name: {product.name}");
+                        WriteLine($"Description: {product.description}");
+                        WriteLine($"Url: {product.url}");
+                        WriteLine($"Price: {product.price}");
+                        WriteLine("\n(D)elete");
 
-                    }
-                    while (invalidChoiceAgain);
+                        CursorVisible = false;
 
-                    switch (inputAgain.Key)
-                    {
-                        // GÖR INGENTING JUST NU------------------------------------------------------------------------------------------------------------
-                        case ConsoleKey.D:
-                            WriteLine($"Article number: {product.articleNumber}");
-                            WriteLine($"Name: {product.name}");
-                            WriteLine($"Description: {product.description}");
-                            WriteLine($"Url: {product.url}");
-                            WriteLine($"Price: {product.price}");
-                            WriteLine("\nAre you sure you want to delete? (Y)es (N)o");
-                            break;
+                        ConsoleKeyInfo inputAgain;
 
-                        case ConsoleKey.Escape:
+                        bool invalidChoiceAgain;
 
+                        do 
+                        {
+                                inputAgain = ReadKey(true);
 
-                            break;
-                    }
+                                invalidChoiceAgain = !(inputAgain.Key == ConsoleKey.Escape || inputAgain.Key == ConsoleKey.D);
 
+                        }
+                        while (invalidChoiceAgain);
+
+                        switch (inputAgain.Key)
+                        {
+                            case ConsoleKey.D:
+
+                                bool isRunningThird = true;
+
+                                do
+                                {
+                                    Clear();
+
+                                    WriteLine($"Article number: {product.articleNumber}");
+                                    WriteLine($"Name: {product.name}");
+                                    WriteLine($"Description: {product.description}");
+                                    WriteLine($"Url: {product.url}");
+                                    WriteLine($"Price: {product.price}");
+                                    WriteLine("\nAre you sure you want to delete? (Y)es (N)o");
+
+                                    ConsoleKeyInfo inputThird;
+
+                                    bool invalidChoiceThird;
+
+                                    do
+                                    {
+                                        inputThird = ReadKey(true);
+
+                                        invalidChoiceThird = !(inputThird.Key == ConsoleKey.Y || inputThird.Key == ConsoleKey.N);
+
+                                    }
+                                    while (invalidChoiceThird);
+
+                                    Clear();
+
+                                    switch (inputThird.Key)
+                                    {
+                                        case ConsoleKey.Y:
+                                            // TODO: Delete from categoryList
+                                            // TODO: Delete from productList
+
+                                            WriteLine("Product deleted");
+
+                                            Thread.Sleep(2000);
+
+                                            isRunningThird = false;
+                                            isRunningAgain = false;
+                                            break;
+
+                                        case ConsoleKey.N:
+
+                                            isRunningThird = false;
+                                            
+                                            break;
+                                    }
+                                } while (isRunningThird);
+
+                                break;
+
+                            case ConsoleKey.Escape:
+
+                                isRunningAgain = false;
+
+                                break;
+                        }
+                    } while (isRunningAgain);
+
+                    isRunning = false;
                 }
                 else
                 {
@@ -253,6 +291,8 @@ namespace ProductManager
                     WriteLine("Product not found");
 
                     Thread.Sleep(2000);
+
+                    isRunning = false;
                 }
                 Clear();
 
