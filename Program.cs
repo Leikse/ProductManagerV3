@@ -25,7 +25,7 @@ namespace ProductManager
                 WriteLine("3. Add category");
                 WriteLine("4. Add product to category");
                 WriteLine("5. List categories");
-                WriteLine("6. Exit");
+                WriteLine("6. Logout");
 
 
                 // TODO: Do this to an method
@@ -214,7 +214,6 @@ namespace ProductManager
                                 inputAgain = ReadKey(true);
 
                                 invalidChoiceAgain = !(inputAgain.Key == ConsoleKey.Escape || inputAgain.Key == ConsoleKey.D);
-
                         }
                         while (invalidChoiceAgain);
 
@@ -253,8 +252,13 @@ namespace ProductManager
                                     switch (inputThird.Key)
                                     {
                                         case ConsoleKey.Y:
-                                            // TODO: Delete from categoryList
-                                            // TODO: Delete from productList
+                                            
+                                            categoryList.ForEach(category =>
+                                            {
+                                                category.productList.Remove(articleNumber);
+                                            });
+
+                                            productDictionary.Remove(articleNumber);
 
                                             WriteLine("Product deleted");
 
@@ -429,11 +433,13 @@ namespace ProductManager
 
             categoryList.ForEach(category =>
             {
-                var numberOfProducts = category.productList != null ? category.productList.Count().ToString() : "";
+                var numberOfProducts = category.productList != null ? category.productList.Count().ToString() : "0";
+
+                WriteLine($"{category.name} ({numberOfProducts})");
 
                 foreach (var product in category.productList)
                 {
-                    WriteLine($"{category.name} ({numberOfProducts})");
+                    
                     WriteLine($"  {product.Value.name}\t\t{product.Value.price}");
                 }
             });
