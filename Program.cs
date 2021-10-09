@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using static System.Console;
@@ -14,10 +15,18 @@ namespace ProductManager
 
         static void Main(string[] args)
         {
+            var isAuthenticated = false;
             var isRunning = true;
 
             do
             {
+                while (!isAuthenticated)
+                {
+                    isAuthenticated = AuthenticateUser();
+                }
+
+                Clear();
+
                 CursorVisible = false;
 
                 WriteLine("1. Add product");
@@ -26,7 +35,7 @@ namespace ProductManager
                 WriteLine("4. Add product to category");
                 WriteLine("5. List categories");
                 WriteLine("6. Logout");
-
+                WriteLine("7. Exit");
 
                 // TODO: Do this to an method
                 ConsoleKeyInfo userInput;
@@ -37,12 +46,13 @@ namespace ProductManager
                 {
                     userInput = ReadKey(true);
 
-                    invalidChoice = !(userInput.Key == ConsoleKey.D1 || userInput.Key == ConsoleKey.NumPad1
+                    invalidChoice = !(userInput.Key == ConsoleKey.D1 || userInput.Key == ConsoleKey.NumPad1 
                                    || userInput.Key == ConsoleKey.D2 || userInput.Key == ConsoleKey.NumPad2
                                    || userInput.Key == ConsoleKey.D3 || userInput.Key == ConsoleKey.NumPad3
                                    || userInput.Key == ConsoleKey.D4 || userInput.Key == ConsoleKey.NumPad4
                                    || userInput.Key == ConsoleKey.D5 || userInput.Key == ConsoleKey.NumPad5
-                                   || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6);
+                                   || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6
+                                   || userInput.Key == ConsoleKey.D7 || userInput.Key == ConsoleKey.NumPad7);
 
                 } while (invalidChoice);
 
@@ -54,48 +64,92 @@ namespace ProductManager
                 {
                     case ConsoleKey.D1:
                     case ConsoleKey.NumPad1:
-                        {
-                            AddProduct();
-                        }
+                    {
+                        AddProduct();
+                    }
                         break;
 
                     case ConsoleKey.D2:
                     case ConsoleKey.NumPad2:
-                        {
-                            ListProduct();
-                        }
+                    {
+                        ListProduct();
+                    }
                         break;
 
                     case ConsoleKey.D3:
                     case ConsoleKey.NumPad3:
-                        {
-                            AddCategory();
-                        }
+                    {
+                        AddCategory();
+                    }
                         break;
 
                     case ConsoleKey.D4:
                     case ConsoleKey.NumPad4:
-                        {
-                            AddProductToCategory();
-                        }
+                    {
+                        AddProductToCategory();
+                    }
                         break;
 
                     case ConsoleKey.D5:
                     case ConsoleKey.NumPad5:
-                        {
-                            ListCategories();
-                        }
+                    {
+                        ListCategories();
+                    }
                         break;
 
                     case ConsoleKey.D6:
                     case ConsoleKey.NumPad6:
-                        {
-                            isRunning = false;
-                        }
+                    {
+                        isAuthenticated = false;
+                    }
+                        break;
+
+                    case ConsoleKey.D7:
+                    case ConsoleKey.NumPad7:
+                    {
+                        isRunning = false;
+                    }
                         break;
                 }
-            } 
-            while (isRunning);
+            } while (isRunning);
+        }
+
+        static bool AuthenticateUser()
+        {
+            bool isRunning = true;
+
+            do
+            {
+                Clear();
+
+                WriteLine("Username: ");
+
+                var userName = ReadLine();
+
+                WriteLine("\nPassword: ");
+
+                var password = ReadLine();
+
+                if (userName == "admin" && password == "123")
+                {
+                    isRunning = false;
+                }
+                else
+                {
+                    Clear();
+
+                    CursorVisible = false;
+
+                    WriteLine("Invalid credentials, please try again");
+
+                    Thread.Sleep(2000);
+
+                    CursorVisible = true;
+                }
+
+            } while (isRunning);
+
+            return true;
         }
 
         static void AddProduct()
@@ -209,11 +263,11 @@ namespace ProductManager
 
                         bool invalidChoiceAgain;
 
-                        do 
+                        do
                         {
-                                inputAgain = ReadKey(true);
+                            inputAgain = ReadKey(true);
 
-                                invalidChoiceAgain = !(inputAgain.Key == ConsoleKey.Escape || inputAgain.Key == ConsoleKey.D);
+                            invalidChoiceAgain = !(inputAgain.Key == ConsoleKey.Escape || inputAgain.Key == ConsoleKey.D);
                         }
                         while (invalidChoiceAgain);
 
@@ -252,7 +306,7 @@ namespace ProductManager
                                     switch (inputThird.Key)
                                     {
                                         case ConsoleKey.Y:
-                                            
+
                                             categoryList.ForEach(category =>
                                             {
                                                 category.productList.Remove(articleNumber);
@@ -271,7 +325,7 @@ namespace ProductManager
                                         case ConsoleKey.N:
 
                                             isRunningThird = false;
-                                            
+
                                             break;
                                     }
                                 } while (isRunningThird);
@@ -439,12 +493,12 @@ namespace ProductManager
 
                 foreach (var product in category.productList)
                 {
-                    
+
                     WriteLine($"  {product.Value.name}\t\t{product.Value.price}");
                 }
             });
 
-            while (ReadKey(true).Key != ConsoleKey.Escape);
+            while (ReadKey(true).Key != ConsoleKey.Escape) ;
 
             Clear();
         }
