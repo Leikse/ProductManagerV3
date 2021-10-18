@@ -4,12 +4,24 @@ namespace ProductManager
 {
     public class Category
     {
-        public string name;
+        public Category(string name, string description, string url)
+        {
+            Name = name;
+            Description = description;
+            Url = url;
+            ProductList = new Dictionary<string, Product>();
+        }
 
-        public string description;
+        public string Name { get; set; }
 
-        public string url;
+        public string Description { get; set; }
+        public string Url { get; set; }
 
-        public Dictionary<string, Product> productList = new Dictionary<string, Product>();
+        public Dictionary<string, Product> ProductList { get; }
+
+        public void AddProduct(Product product)
+        {
+            ProductList.Add(product.articleNumber, product);
+        }
     }
 }

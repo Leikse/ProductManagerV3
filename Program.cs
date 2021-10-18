@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using static System.Console;
 
@@ -37,7 +35,7 @@ namespace ProductManager
                 WriteLine("6. Logout");
                 WriteLine("7. Exit");
 
-                // TODO: Do this to an method
+
                 ConsoleKeyInfo userInput;
 
                 bool invalidChoice;
@@ -47,12 +45,12 @@ namespace ProductManager
                     userInput = ReadKey(true);
 
                     invalidChoice = !(userInput.Key == ConsoleKey.D1 || userInput.Key == ConsoleKey.NumPad1 
-                                   || userInput.Key == ConsoleKey.D2 || userInput.Key == ConsoleKey.NumPad2
-                                   || userInput.Key == ConsoleKey.D3 || userInput.Key == ConsoleKey.NumPad3
-                                   || userInput.Key == ConsoleKey.D4 || userInput.Key == ConsoleKey.NumPad4
-                                   || userInput.Key == ConsoleKey.D5 || userInput.Key == ConsoleKey.NumPad5
-                                   || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6
-                                   || userInput.Key == ConsoleKey.D7 || userInput.Key == ConsoleKey.NumPad7);
+                                                                     || userInput.Key == ConsoleKey.D2 || userInput.Key == ConsoleKey.NumPad2
+                                                                     || userInput.Key == ConsoleKey.D3 || userInput.Key == ConsoleKey.NumPad3
+                                                                     || userInput.Key == ConsoleKey.D4 || userInput.Key == ConsoleKey.NumPad4
+                                                                     || userInput.Key == ConsoleKey.D5 || userInput.Key == ConsoleKey.NumPad5
+                                                                     || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6
+                                                                     || userInput.Key == ConsoleKey.D7 || userInput.Key == ConsoleKey.NumPad7);
 
                 } while (invalidChoice);
 
@@ -152,7 +150,7 @@ namespace ProductManager
             return true;
         }
 
-        static void AddProduct()
+        private static void AddProduct()
         {
             Product product = CreateProduct();
 
@@ -195,8 +193,7 @@ namespace ProductManager
 
             Clear();
         }
-
-        static Product CreateProduct()
+        private static Product CreateProduct()
         {
             Write("Article number: ");
 
@@ -228,6 +225,7 @@ namespace ProductManager
             };
             return product;
         }
+
         static void ListProduct()
         {
             Write("Article number: ");
@@ -309,7 +307,7 @@ namespace ProductManager
 
                                             categoryList.ForEach(category =>
                                             {
-                                                category.productList.Remove(articleNumber);
+                                                category.ProductList.Remove(articleNumber);
                                             });
 
                                             productDictionary.Remove(articleNumber);
@@ -418,11 +416,11 @@ namespace ProductManager
             var url = ReadLine();
 
             Category category = new Category
-            {
-                name = name,
-                description = description,
-                url = url,
-            };
+            (
+                name,
+                description,
+                url
+            );
             return category;
         }
 
@@ -442,7 +440,7 @@ namespace ProductManager
 
                 var name = ReadLine();
 
-                var categoryExists = categoryList.Any(category => category.name == name);
+                var categoryExists = categoryList.Any(category => category.Name == name);
 
                 Clear();
 
@@ -452,9 +450,9 @@ namespace ProductManager
                 {
                     var productToAdd = productDictionary.SingleOrDefault(x => x.Value.articleNumber == ArticleNumber);
 
-                    var categoryToAddTo = categoryList.SingleOrDefault(x => x.name == name);
+                    var categoryToAddTo = categoryList.SingleOrDefault(x => x.Name == name);
 
-                    categoryToAddTo.productList.Add(productToAdd.Key, productToAdd.Value);
+                    categoryToAddTo.AddProduct(productToAdd.Value);
 
                     WriteLine("Product added to category");
 
@@ -487,13 +485,12 @@ namespace ProductManager
 
             categoryList.ForEach(category =>
             {
-                var numberOfProducts = category.productList != null ? category.productList.Count().ToString() : "0";
+                var numberOfProducts = category.ProductList != null ? category.ProductList.Count().ToString() : "0";
 
-                WriteLine($"{category.name} ({numberOfProducts})");
+                WriteLine($"{category.Name} ({numberOfProducts})");
 
-                foreach (var product in category.productList)
+                foreach (var product in category.ProductList)
                 {
-
                     WriteLine($"  {product.Value.name}\t\t{product.Value.price}");
                 }
             });

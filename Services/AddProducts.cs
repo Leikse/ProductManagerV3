@@ -1,7 +1,0 @@
-﻿namespace ProductManager
-{
-    class AddProducts
-    {
-
-    }
-}
