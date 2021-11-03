@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using static System.Console;
+using Microsoft.Data.SqlClient;
 
 namespace ProductManager
 {
@@ -10,6 +11,8 @@ namespace ProductManager
     {
         static Dictionary<string, Product> productDictionary = new Dictionary<string, Product>();
         static List<Category> categoryList = new List<Category>();
+
+        static string connectionString = "Server=.;Database=ProductManager;Integrated Security=True";
 
         static void Main(string[] args)
         {
@@ -415,12 +418,36 @@ namespace ProductManager
 
             var url = ReadLine();
 
-            Category category = new Category
-            (
-                name,
-                description,
-                url
-            );
+            Category category = new(name: name, description: description, url: url);
+
+            string sql = @"INSERT INTO Categorys (
+                         Name,
+                         Description,
+                         Url
+                         ) VALUES (
+                         @Name,
+                         @Description,
+                         @Url)";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new(sql, connection);
+
+            command.Parameters.AddWithValue("@Name", category.Name);
+            command.Parameters.AddWithValue("@Description", category.Description);
+            command.Parameters.AddWithValue("@Url", category.Url);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
+
+            //Category category = new Category
+            //(
+            //    name,
+            //    description,
+            //    url
+            //);
             return category;
         }
 
