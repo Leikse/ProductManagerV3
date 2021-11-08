@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using static System.Console;
 using Microsoft.Data.SqlClient;
+using ProductManager.Models;
 
 namespace ProductManager
 {
@@ -138,13 +139,21 @@ namespace ProductManager
 
                 WriteLine("Username: ");
 
-                var userName = ReadLine();
+                var username = ReadLine();
 
                 WriteLine("\nPassword: ");
 
                 var password = ReadLine();
 
-                if (userName == "admin" && password == "123")
+                Login login = FindLogin(username);
+
+                var usernameInvalid = username == null;
+                var passwordInvalid = password == null;
+                var usernameCorrect = username == login.Username;
+                var passwordCorrect = password == login.Password;
+
+
+                if (!usernameInvalid && !passwordInvalid && usernameCorrect && passwordCorrect)
                 {
                     isRunning = false;
                 }
@@ -164,6 +173,40 @@ namespace ProductManager
             } while (isRunning);
 
             return true;
+        }
+
+        private static Login FindLogin(string username)
+        {
+            string sql = @"
+                SELECT Username,
+                       Password
+                FROM Logins
+               WHERE Username = @Username
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@Username", username);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            Login login = null;
+
+            if (dataReader.Read())
+            {
+                login = new Login(
+                    username: (string) dataReader["Username"],
+                    password: (string) dataReader["Password"]);
+            }
+
+            connection.Close();
+
+            return login;
+
         }
 
         private static void AddProduct()
@@ -397,16 +440,14 @@ namespace ProductManager
                                     {
                                         case ConsoleKey.Y:
 
-                                            // TODO: Change to remove from SQL instead of List
-                                            //Product productDelete = DeleteProduct(products);
-                                            // Product productExist = FindProduct(product.ArticleNumber);
+                                            DeleteProduct(articleNumber);
 
+                                            // TODO: Change to remove from SQL instead of List
+                                            // It removes from Products but needs to remove from Categorys too
                                             categoryList.ForEach(category =>
                                             {
                                                 category.ProductList.Remove(articleNumber);
                                             });
-
-                                            productDictionary.Remove(articleNumber);
 
                                             WriteLine("Product deleted");
 
@@ -451,28 +492,17 @@ namespace ProductManager
             } while (isRunning);
         }
 
-        private static void DeleteProduct(Product product)
+        private static void DeleteProduct(string articleNumber)
         {
             string sql = @"
-                         DELETE FROM Products (
-                                     ArticleNumber, 
-                                     Name, 
-                                     Description, 
-                                     Url, 
-                                     Price
-                                FROM Products
-                               WHERE ArticleNumber = @ArticleNumber
+                         DELETE FROM Products WHERE ArticleNumber = @ArticleNumber
                                 ";
 
             using SqlConnection connection = new(connectionString);
             using SqlCommand command = new(sql, connection);
 
-            //command.Parameters.AddWithValue("@ArticleNumber", product.ArticleNumber);
-            //command.Parameters.AddWithValue("@Name", product.Name);
-            //command.Parameters.AddWithValue("@Description", product.Description);
-            //command.Parameters.AddWithValue("@Url", product.Url);
-            //command.Parameters.AddWithValue("@Price", product.Price);
-
+            command.Parameters.AddWithValue("@ArticleNumber", articleNumber);
+            
             connection.Open();
 
             command.ExecuteNonQuery();

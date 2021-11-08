@@ -7,6 +7,8 @@ SELECT * FROM Products
 
 SELECT * FROM Categorys
 
+SELECT * FROM Logins
+
 CREATE TABLE Products (
 	ArticleNumber NVARCHAR(50),
     Name NVARCHAR(50) NOT NULL,
@@ -20,13 +22,13 @@ CREATE TABLE Categorys (
     Name NVARCHAR(50), 
     Description NVARCHAR(50) NOT NULL,
     Url NVARCHAR(50) NOT NULL,
-    ProductArticleNumber NVARCHAR(50) NOT NULL,
+    ProductArticleNumber NVARCHAR(50),
     PRIMARY KEY (Name),
     FOREIGN KEY (ProductArticleNumber) REFERENCES Products (ArticleNumber)
 )
 
-CREATE TABLE Login (
+CREATE TABLE Logins (
     Username NVARCHAR(50),
-    Password NVARCHAR(50)
-    PRIMARY KEY (
+    Password NVARCHAR(50) NOT NULL,
+    PRIMARY KEY (Username)
 )
