@@ -13,15 +13,14 @@ namespace ProductManager
         }
 
         public string Name { get; set; }
-
         public string Description { get; set; }
         public string Url { get; set; }
 
+        // TODO: When done with SQL, remove these 2
         public Dictionary<string, Product> ProductList { get; }
-
         public void AddProduct(Product product)
         {
-            ProductList.Add(product.articleNumber, product);
+            ProductList.Add(product.ArticleNumber, product);
         }
     }
 }

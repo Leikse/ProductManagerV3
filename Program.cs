@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,7 @@ namespace ProductManager
 {
     class Program
     {
+        // TODO: When done with SQL, remove these
         static Dictionary<string, Product> productDictionary = new Dictionary<string, Product>();
         static List<Category> categoryList = new List<Category>();
 
@@ -35,8 +37,9 @@ namespace ProductManager
                 WriteLine("3. Add category");
                 WriteLine("4. Add product to category");
                 WriteLine("5. List categories");
-                WriteLine("6. Logout");
-                WriteLine("7. Exit");
+                WriteLine("6. Add Category to category");
+                WriteLine("7. Logout");
+                WriteLine("8. Exit");
 
 
                 ConsoleKeyInfo userInput;
@@ -53,7 +56,8 @@ namespace ProductManager
                                                                      || userInput.Key == ConsoleKey.D4 || userInput.Key == ConsoleKey.NumPad4
                                                                      || userInput.Key == ConsoleKey.D5 || userInput.Key == ConsoleKey.NumPad5
                                                                      || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6
-                                                                     || userInput.Key == ConsoleKey.D7 || userInput.Key == ConsoleKey.NumPad7);
+                                                                     || userInput.Key == ConsoleKey.D7 || userInput.Key == ConsoleKey.NumPad7
+                                                                     || userInput.Key == ConsoleKey.D8 || userInput.Key == ConsoleKey.NumPad8);
 
                 } while (invalidChoice);
 
@@ -101,12 +105,19 @@ namespace ProductManager
                     case ConsoleKey.D6:
                     case ConsoleKey.NumPad6:
                     {
-                        isAuthenticated = false;
+                        AddCategoryToCategory();
                     }
                         break;
 
                     case ConsoleKey.D7:
                     case ConsoleKey.NumPad7:
+                    {
+                        isAuthenticated = false;
+                    }
+                        break;
+
+                    case ConsoleKey.D8:
+                    case ConsoleKey.NumPad8:
                     {
                         isRunning = false;
                     }
@@ -121,6 +132,8 @@ namespace ProductManager
 
             do
             {
+                // TODO: Take username and password from SQL server
+
                 Clear();
 
                 WriteLine("Username: ");
@@ -174,7 +187,9 @@ namespace ProductManager
             }
             while (invalidChoice);
 
-            var productNotExists = !productDictionary.ContainsKey(product.articleNumber);
+            Product productExist = FindProduct(product.ArticleNumber);
+
+            var productNotExists = productExist == null;
 
             Clear();
 
@@ -186,7 +201,7 @@ namespace ProductManager
             }
             else if (input.Key == ConsoleKey.Y && productNotExists)
             {
-                productDictionary.Add(product.articleNumber, product);
+                SaveProduct(product);
 
                 WriteLine("Product saved");
 
@@ -196,6 +211,46 @@ namespace ProductManager
 
             Clear();
         }
+
+        static Product FindProduct(string articleNumber)
+        {
+            string sql = @"
+                        SELECT ArticleNumber,
+                               Name,
+                               Description,
+                               Url,
+                               Price
+                        FROM Products
+                        WHERE ArticleNumber = @ArticleNumber
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@ArticleNumber", articleNumber);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            Product product = null;
+
+            if (dataReader.Read())
+            {
+                product = new Product(
+                    articleNumber: (string) dataReader["ArticleNumber"],
+                    name: (string) dataReader["Name"],
+                    description: (string) dataReader["Description"],
+                    url: (string) dataReader["Url"],
+                    price: (int) dataReader["Price"]);
+            }
+
+            connection.Close();
+
+            return product;
+        }
+
         private static Product CreateProduct()
         {
             Write("Article number: ");
@@ -218,15 +273,42 @@ namespace ProductManager
 
             var price = int.Parse(ReadLine());
 
-            Product product = new Product
-            {
-                articleNumber = articleNumber,
-                name = name,
-                description = description,
-                url = url,
-                price = price
-            };
+            Product product = new(articleNumber: articleNumber, name: name, description: description, url: url, price: price);
+
             return product;
+        }
+
+        private static void SaveProduct(Product product)
+        {
+            string sql = @"
+                         INSERT INTO Products (
+                                     ArticleNumber, 
+                                     Name, 
+                                     Description, 
+                                     Url, 
+                                     Price
+                                ) VALUES (
+                                     @ArticleNumber, 
+                                     @Name, 
+                                     @Description, 
+                                     @Url, 
+                                     @Price
+                                )";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new(sql, connection);
+
+            command.Parameters.AddWithValue("@ArticleNumber", product.ArticleNumber);
+            command.Parameters.AddWithValue("@Name", product.Name);
+            command.Parameters.AddWithValue("@Description", product.Description);
+            command.Parameters.AddWithValue("@Url", product.Url);
+            command.Parameters.AddWithValue("@Price", product.Price);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
         }
 
         static void ListProduct()
@@ -236,29 +318,32 @@ namespace ProductManager
             var articleNumber = ReadLine();
 
             Clear();
+            
+            var products = FindProductList();
 
-            var productExists = productDictionary.ContainsKey(articleNumber);
+            var productNotExists = products == null;
 
             var isRunning = true;
 
             do
             {
-                if (productExists)
+                if (!productNotExists)
                 {
                     bool isRunningAgain = true;
 
                     do
                     {
-                        var product = productDictionary[articleNumber];
+                        foreach (var product in products)
+                        {
+                            WriteLine($"Article number: {product.ArticleNumber}");
+                            WriteLine($"Name: {product.Name}");
+                            WriteLine($"Description: {product.Description}");
+                            WriteLine($"Url: {product.Url}");
+                            WriteLine($"Price: {product.Price}");
+                            WriteLine("\n(D)elete");
 
-                        WriteLine($"Article number: {product.articleNumber}");
-                        WriteLine($"Name: {product.name}");
-                        WriteLine($"Description: {product.description}");
-                        WriteLine($"Url: {product.url}");
-                        WriteLine($"Price: {product.price}");
-                        WriteLine("\n(D)elete");
-
-                        CursorVisible = false;
+                            CursorVisible = false;
+                        }
 
                         ConsoleKeyInfo inputAgain;
 
@@ -282,11 +367,15 @@ namespace ProductManager
                                 {
                                     Clear();
 
-                                    WriteLine($"Article number: {product.articleNumber}");
-                                    WriteLine($"Name: {product.name}");
-                                    WriteLine($"Description: {product.description}");
-                                    WriteLine($"Url: {product.url}");
-                                    WriteLine($"Price: {product.price}");
+                                    foreach (var product in products)
+                                    {
+                                        WriteLine($"Article number: {product.ArticleNumber}");
+                                        WriteLine($"Name: {product.Name}");
+                                        WriteLine($"Description: {product.Description}");
+                                        WriteLine($"Url: {product.Url}");
+                                        WriteLine($"Price: {product.Price}");
+                                    }
+
                                     WriteLine("\nAre you sure you want to delete? (Y)es (N)o");
 
                                     ConsoleKeyInfo inputThird;
@@ -307,6 +396,10 @@ namespace ProductManager
                                     switch (inputThird.Key)
                                     {
                                         case ConsoleKey.Y:
+
+                                            // TODO: Change to remove from SQL instead of List
+                                            //Product productDelete = DeleteProduct(products);
+                                            // Product productExist = FindProduct(product.ArticleNumber);
 
                                             categoryList.ForEach(category =>
                                             {
@@ -358,6 +451,73 @@ namespace ProductManager
             } while (isRunning);
         }
 
+        private static void DeleteProduct(Product product)
+        {
+            string sql = @"
+                         DELETE FROM Products (
+                                     ArticleNumber, 
+                                     Name, 
+                                     Description, 
+                                     Url, 
+                                     Price
+                                FROM Products
+                               WHERE ArticleNumber = @ArticleNumber
+                                ";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new(sql, connection);
+
+            //command.Parameters.AddWithValue("@ArticleNumber", product.ArticleNumber);
+            //command.Parameters.AddWithValue("@Name", product.Name);
+            //command.Parameters.AddWithValue("@Description", product.Description);
+            //command.Parameters.AddWithValue("@Url", product.Url);
+            //command.Parameters.AddWithValue("@Price", product.Price);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+
+        private static IList<Product> FindProductList()
+        {
+            string sql = @"
+                SELECT ArticleNumber,
+                       Name,
+                       Description,
+                       Url,
+                       Price
+                  FROM Products
+            ";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new SqlCommand(sql, connection);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            List<Product> productList = new List<Product>();
+
+            while (dataReader.Read())
+            {
+                var articleNumber = (string) dataReader["ArticleNumber"];
+                var name = (string) dataReader["Name"];
+                var description = (string) dataReader["Description"];
+                var url = (string) dataReader["Url"];
+                var price = (int) dataReader["Price"];
+
+                Product product = new Product(articleNumber, name, description, url, price);
+
+                productList.Add(product);
+            }
+
+            connection.Close();
+
+            return productList;
+        }
+
         static void AddCategory()
         {
             var isRunning = true;
@@ -387,7 +547,8 @@ namespace ProductManager
 
                 if (input.Key == ConsoleKey.Y)
                 {
-                    categoryList.Add(category);
+                    //categoryList.Add(category);
+                    SaveCategory(category);
 
                     WriteLine("Category added");
 
@@ -420,6 +581,11 @@ namespace ProductManager
 
             Category category = new(name: name, description: description, url: url);
 
+            return category;
+        }
+
+        private static void SaveCategory(Category category)
+        {
             string sql = @"INSERT INTO Categorys (
                          Name,
                          Description,
@@ -441,14 +607,6 @@ namespace ProductManager
             command.ExecuteNonQuery();
 
             connection.Close();
-
-            //Category category = new Category
-            //(
-            //    name,
-            //    description,
-            //    url
-            //);
-            return category;
         }
 
         static void AddProductToCategory()
@@ -467,6 +625,7 @@ namespace ProductManager
 
                 var name = ReadLine();
 
+                // TODO: Change to check in SQL instead of List
                 var categoryExists = categoryList.Any(category => category.Name == name);
 
                 Clear();
@@ -475,7 +634,7 @@ namespace ProductManager
 
                 if (categoryExists)
                 {
-                    var productToAdd = productDictionary.SingleOrDefault(x => x.Value.articleNumber == ArticleNumber);
+                    var productToAdd = productDictionary.SingleOrDefault(x => x.Value.ArticleNumber == ArticleNumber);
 
                     var categoryToAddTo = categoryList.SingleOrDefault(x => x.Name == name);
 
@@ -510,6 +669,7 @@ namespace ProductManager
             WriteLine("Name\t\tPrice");
             WriteLine("------------------------------------------------------------------------------");
 
+            // TODO: Change to list from SQL instead of List
             categoryList.ForEach(category =>
             {
                 var numberOfProducts = category.ProductList != null ? category.ProductList.Count().ToString() : "0";
@@ -518,13 +678,67 @@ namespace ProductManager
 
                 foreach (var product in category.ProductList)
                 {
-                    WriteLine($"  {product.Value.name}\t\t{product.Value.price}");
+                    WriteLine($"  {product.Value.Name}\t\t{product.Value.Price}");
                 }
             });
 
             while (ReadKey(true).Key != ConsoleKey.Escape) ;
 
             Clear();
+        }
+
+        private static void AddCategoryToCategory()
+        {
+            bool isRunning = true;
+
+            do
+            {
+                Write("Parent category: ");
+
+                var parentCategory = ReadLine();
+
+                Write("Child category: ");
+
+                var childCategory = ReadLine();
+
+                Write("\nIs this correct? (Y)es (N)o");
+
+                CursorVisible = false;
+
+                ConsoleKeyInfo input;
+
+                bool invalidChoice;
+
+                do
+                {
+                    input = ReadKey(true);
+
+                    invalidChoice = !(input.Key == ConsoleKey.Y || input.Key == ConsoleKey.N);
+
+                }
+                while (invalidChoice);
+
+                Clear();
+
+                if (input.Key == ConsoleKey.Y)
+                {
+                    // TODO: Add Category to Category in SQL
+
+                    WriteLine("This does nothing right now.");
+                    //WriteLine("Categories connected");
+
+                    Thread.Sleep(2000);
+
+                    isRunning = false;
+                }
+                else
+                {
+                    isRunning = false;
+                }
+
+                Clear();
+
+            } while (isRunning);
         }
     }
 }

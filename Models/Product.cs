@@ -2,14 +2,23 @@
 {
     public class Product
     {
-        public string articleNumber;
+        public string ArticleNumber { get; }
 
-        public string name;
+        public string Name { get; }
 
-        public string description;
+        public string Description { get; } 
 
-        public string url;
+        public string Url { get; }
 
-        public int price;
+        public int Price { get; }
+
+        public Product(string articleNumber, string name, string description, string url, int price)
+        {
+            ArticleNumber = articleNumber;
+            Name = name;
+            Description = description;
+            Url = url;
+            Price = price;
+        }
     }
 }
