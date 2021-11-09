@@ -133,8 +133,6 @@ namespace ProductManager
 
             do
             {
-                // TODO: Take username and password from SQL server
-
                 Clear();
 
                 WriteLine("Username: ");
@@ -151,7 +149,6 @@ namespace ProductManager
                 var passwordInvalid = password == null;
                 var usernameCorrect = username == login.Username;
                 var passwordCorrect = password == login.Password;
-
 
                 if (!usernameInvalid && !passwordInvalid && usernameCorrect && passwordCorrect)
                 {
