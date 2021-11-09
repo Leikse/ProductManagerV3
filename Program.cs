@@ -438,14 +438,8 @@ namespace ProductManager
                                         case ConsoleKey.Y:
 
                                             DeleteProduct(articleNumber);
-                                            DeleteCategory(articleNumber);
 
-                                            // TODO: Change to remove from SQL instead of List
-                                            // It removes from Products but needs to remove from Categorys too
-                                            categoryList.ForEach(category =>
-                                            {
-                                                category.ProductList.Remove(articleNumber);
-                                            });
+                                            DeleteCategory(articleNumber);
 
                                             WriteLine("Product deleted");
 
@@ -625,9 +619,7 @@ namespace ProductManager
 
             var url = ReadLine();
 
-            Product product = null;
-
-            var category = new Category(name, description, url, product);
+            var category = new Category(name, description, url);
 
             return category;
         }
@@ -665,18 +657,15 @@ namespace ProductManager
 
             Clear();
             
-            var products = FindProductList();
+            Product product = FindProduct(articleNumber);
 
-            var productNotExists = products == null;
+            var productNotExists = product == null;
 
             if (!productNotExists)
             {
                 WriteLine("Category name: ");
 
                 var name = ReadLine();
-
-                // TODO: Change to check in SQL instead of List
-                //var categoryExists = categoryList.Any(category => category.Name == name);
 
                 Category category = FindCategory(name);
 
@@ -688,14 +677,7 @@ namespace ProductManager
 
                 if (!categoryNotExists)
                 {
-                    SaveProductToCategory(category);
-
-                    // TODO: Change to add in SQL instead of List
-                    //var productToAdd = productDictionary.SingleOrDefault(x => x.Value.ArticleNumber == ArticleNumber);
-
-                    //var categoryToAddTo = categoryList.SingleOrDefault(x => x.Name == name);
-
-                    //categoryToAddTo.AddProduct(productToAdd.Value);
+                    SaveProductToCategory(category, product);
 
                     WriteLine("Product added to category");
 
@@ -719,7 +701,7 @@ namespace ProductManager
             Clear();
         }
 
-        private static void SaveProductToCategory(Category category)
+        private static void SaveProductToCategory(Category category, Product product)
         {
             string sql = @"INSERT INTO CategoryProduct (
                          ProductArticleNumber,
@@ -731,7 +713,7 @@ namespace ProductManager
             using SqlConnection connection = new(connectionString);
             using SqlCommand command = new(sql, connection);
 
-            command.Parameters.AddWithValue("@ProductArticleNumber", category.Product.ArticleNumber);
+            command.Parameters.AddWithValue("@ProductArticleNumber", product.ArticleNumber);
             command.Parameters.AddWithValue("@CategoryName", category.Name);
 
             connection.Open();
@@ -743,7 +725,6 @@ namespace ProductManager
 
         static Category FindCategory(string name)
         {
-            // TODO: Update
             string sql = @"
                         SELECT Name,
                                Description,
@@ -769,8 +750,7 @@ namespace ProductManager
                 category = new Category(
                     name: (string) dataReader["Name"],
                     description: (string) dataReader["Description"],
-                    url: (string) dataReader["Url"],
-                    product: null);
+                    url: (string) dataReader["Url"]);
             }
 
             connection.Close();
@@ -817,13 +797,12 @@ namespace ProductManager
 
                 var childCategory = ReadLine();
 
-                // TODO: Search categorys
+                CursorVisible = false;
 
                 Write("\nIs this correct? (Y)es (N)o");
 
-                Category category = CategoriesExists(parentCategory, childCategory);
-
-                CursorVisible = false;
+                // TODO: Search categorys
+                bool categoriesExists = CategoriesExists(parentCategory, childCategory);
 
                 ConsoleKeyInfo input;
 
@@ -840,11 +819,11 @@ namespace ProductManager
 
                 Clear();
 
-                if (input.Key == ConsoleKey.Y)
+                if (input.Key == ConsoleKey.Y && categoriesExists)
                 {
                     // TODO: Add Category to Category in SQL
 
-                    SaveCategoryToCategory(category);
+                    //SaveCategoryToCategory();
 
                     WriteLine("This does nothing right now.");
                     //WriteLine("Categories connected");
@@ -863,16 +842,13 @@ namespace ProductManager
             } while (isRunning);
         }
 
-        private static Category CategoriesExists(string parentCategory, string childCategory)
+        private static bool CategoriesExists(string parentCategory, string childCategory)
         {
             string sql = @"
-                        SELECT Name
+                        SELECT *
                         FROM Categorys
-                        WHERE EXISTS 
-                       (SELECT CategoryName 
-                        FROM CategoryProduct 
-                        WHERE CategoryName = @ParentCategory 
-                        OR CategoryName = @ChildCategory) 
+                        WHERE Name = @ParentCategory 
+                        OR Name = @ChildCategory
             ";
 
             using var connection = new SqlConnection(connectionString);
@@ -880,26 +856,28 @@ namespace ProductManager
             using var command = new SqlCommand(sql, connection);
 
             command.Parameters.AddWithValue("@ParentCategory", parentCategory);
-            command.Parameters.AddWithValue("@CategoryName", childCategory);
+            command.Parameters.AddWithValue("@ChildCategory", childCategory);
 
             connection.Open();
 
             var dataReader = command.ExecuteReader();
 
-            Category category = null;
+            var categoryExists = false;
 
             if (dataReader.Read())
             {
-                category = new Category(
-                    name: (string)dataReader["Name"],
-                    description: (string)dataReader["Description"],
-                    url: (string)dataReader["Url"],
-                    product: null);
+                var apa = dataReader.FieldCount;
+
+                if (apa == 2)
+                {
+                    categoryExists = true;
+                }
+                WriteLine(dataReader);
             }
 
             connection.Close();
 
-            return category;
+            return categoryExists;
         }
 
         private static void SaveCategoryToCategory(Category category)

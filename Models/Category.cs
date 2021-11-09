@@ -4,12 +4,11 @@ namespace ProductManager
 {
     public class Category
     {
-        public Category(string name, string description, string url, Product product)
+        public Category(string name, string description, string url)
         {
             Name = name;
             Description = description;
             Url = url;
-            Product = product;
 
             ProductList = new Dictionary<string, Product>();
         }
@@ -17,10 +16,6 @@ namespace ProductManager
         public string Name { get; set; }
         public string Description { get; set; }
         public string Url { get; set; }
-        public Product Product { get; }
-
-        // TODO: Do I even need this?
-        //public string ParentCategory { get; }
 
         // TODO: When done with SQL, remove these 2
         public Dictionary<string, Product> ProductList { get; }
