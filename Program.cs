@@ -438,6 +438,7 @@ namespace ProductManager
                                         case ConsoleKey.Y:
 
                                             DeleteProduct(articleNumber);
+                                            DeleteCategory(articleNumber);
 
                                             // TODO: Change to remove from SQL instead of List
                                             // It removes from Products but needs to remove from Categorys too
@@ -500,6 +501,24 @@ namespace ProductManager
 
             command.Parameters.AddWithValue("@ArticleNumber", articleNumber);
             
+            connection.Open();
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+
+        private static void DeleteCategory(string articleNumber)
+        {
+            string sql = @"
+                         DELETE FROM CategoryProduct WHERE ProductArticleNumber = @ProductArticleNumber
+                                ";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new(sql, connection);
+
+            command.Parameters.AddWithValue("@ProductArticleNumber", articleNumber);
+
             connection.Open();
 
             command.ExecuteNonQuery();
@@ -606,7 +625,9 @@ namespace ProductManager
 
             var url = ReadLine();
 
-            Category category = new(name: name, description: description, url: url);
+            Product product = null;
+
+            var category = new Category(name, description, url, product);
 
             return category;
         }
@@ -640,32 +661,41 @@ namespace ProductManager
         {
             Write("Article number: ");
 
-            var ArticleNumber = ReadLine();
+            var articleNumber = ReadLine();
 
             Clear();
+            
+            var products = FindProductList();
 
-            var productExists = productDictionary.ContainsKey(ArticleNumber);
+            var productNotExists = products == null;
 
-            if (productExists)
+            if (!productNotExists)
             {
                 WriteLine("Category name: ");
 
                 var name = ReadLine();
 
                 // TODO: Change to check in SQL instead of List
-                var categoryExists = categoryList.Any(category => category.Name == name);
+                //var categoryExists = categoryList.Any(category => category.Name == name);
+
+                Category category = FindCategory(name);
+
+                var categoryNotExists = category == null;
 
                 Clear();
 
                 CursorVisible = false;
 
-                if (categoryExists)
+                if (!categoryNotExists)
                 {
-                    var productToAdd = productDictionary.SingleOrDefault(x => x.Value.ArticleNumber == ArticleNumber);
+                    SaveProductToCategory(category);
 
-                    var categoryToAddTo = categoryList.SingleOrDefault(x => x.Name == name);
+                    // TODO: Change to add in SQL instead of List
+                    //var productToAdd = productDictionary.SingleOrDefault(x => x.Value.ArticleNumber == ArticleNumber);
 
-                    categoryToAddTo.AddProduct(productToAdd.Value);
+                    //var categoryToAddTo = categoryList.SingleOrDefault(x => x.Name == name);
+
+                    //categoryToAddTo.AddProduct(productToAdd.Value);
 
                     WriteLine("Product added to category");
 
@@ -687,6 +717,65 @@ namespace ProductManager
                 Thread.Sleep(2000);
             }
             Clear();
+        }
+
+        private static void SaveProductToCategory(Category category)
+        {
+            string sql = @"INSERT INTO CategoryProduct (
+                         ProductArticleNumber,
+                         CategoryName
+                         ) VALUES (
+                         @ProductArticleNumber,
+                         @CategoryName)";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new(sql, connection);
+
+            command.Parameters.AddWithValue("@ProductArticleNumber", category.Product.ArticleNumber);
+            command.Parameters.AddWithValue("@CategoryName", category.Name);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
+        }
+
+        static Category FindCategory(string name)
+        {
+            // TODO: Update
+            string sql = @"
+                        SELECT Name,
+                               Description,
+                               Url
+                        FROM Categorys
+                        WHERE Name = @Name
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@Name", name);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            Category category = null;
+
+            if (dataReader.Read())
+            {
+                category = new Category(
+                    name: (string) dataReader["Name"],
+                    description: (string) dataReader["Description"],
+                    url: (string) dataReader["Url"],
+                    product: null);
+            }
+
+            connection.Close();
+
+            return category;
         }
 
         static void ListCategories()
@@ -728,7 +817,11 @@ namespace ProductManager
 
                 var childCategory = ReadLine();
 
+                // TODO: Search categorys
+
                 Write("\nIs this correct? (Y)es (N)o");
+
+                Category category = CategoriesExists(parentCategory, childCategory);
 
                 CursorVisible = false;
 
@@ -751,6 +844,8 @@ namespace ProductManager
                 {
                     // TODO: Add Category to Category in SQL
 
+                    SaveCategoryToCategory(category);
+
                     WriteLine("This does nothing right now.");
                     //WriteLine("Categories connected");
 
@@ -766,6 +861,72 @@ namespace ProductManager
                 Clear();
 
             } while (isRunning);
+        }
+
+        private static Category CategoriesExists(string parentCategory, string childCategory)
+        {
+            string sql = @"
+                        SELECT Name
+                        FROM Categorys
+                        WHERE EXISTS 
+                       (SELECT CategoryName 
+                        FROM CategoryProduct 
+                        WHERE CategoryName = @ParentCategory 
+                        OR CategoryName = @ChildCategory) 
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+
+            using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@ParentCategory", parentCategory);
+            command.Parameters.AddWithValue("@CategoryName", childCategory);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            Category category = null;
+
+            if (dataReader.Read())
+            {
+                category = new Category(
+                    name: (string)dataReader["Name"],
+                    description: (string)dataReader["Description"],
+                    url: (string)dataReader["Url"],
+                    product: null);
+            }
+
+            connection.Close();
+
+            return category;
+        }
+
+        private static void SaveCategoryToCategory(Category category)
+        {
+            string sql = @"
+                         INSERT INTO CategoryToCategory (
+                                     ParentCategory, 
+                                     ChildCategory, 
+                                     ProductName
+                                ) VALUES (
+                                     @ParentCategory, 
+                                     @ChildCategory, 
+                                     @ProductName
+                                )";
+
+            using SqlConnection connection = new(connectionString);
+            using SqlCommand command = new(sql, connection);
+
+            command.Parameters.AddWithValue("@ParentCategory", category.Name);
+            command.Parameters.AddWithValue("@ChildCategory", category.Name);
+            command.Parameters.AddWithValue("@ProductName", category.Name);
+
+            connection.Open();
+
+            command.ExecuteNonQuery();
+
+            connection.Close();
         }
     }
 }
