@@ -7,26 +7,28 @@ SELECT * FROM Products
 
 SELECT * FROM Categorys
 
-SELECT * FROM Logins
+SELECT * FROM CategoryProduct
 
 SELECT * FROM CategoryToCategory
 
-SELECT * FROM CategoryProduct
+SELECT * FROM Logins
 
 CREATE TABLE Products (
+    Id INT IDENTITY,
 	ArticleNumber NVARCHAR(50),
     Name NVARCHAR(50) NOT NULL,
     Description NVARCHAR(50) NOT NULL,
     Url NVARCHAR(50) NOT NULL,
     Price INT NOT NULL,
-    PRIMARY KEY (ArticleNumber)
+    PRIMARY KEY (Id)
 )
 
 CREATE TABLE Categorys (
+    Id INT IDENTITY,
     Name NVARCHAR(50), 
     Description NVARCHAR(50) NOT NULL,
     Url NVARCHAR(50) NOT NULL,
-    PRIMARY KEY (Name),
+    PRIMARY KEY (Id),
 )
 
 CREATE TABLE Logins (
@@ -36,17 +38,16 @@ CREATE TABLE Logins (
 )
 
 CREATE TABLE CategoryProduct (
-    ProductArticleNumber NVARCHAR(50) NOT NULL,
-    CategoryName NVARCHAR(50) NOT NULL,
-    UNIQUE (ProductArticleNumber, CategoryName),
-    FOREIGN KEY (ProductArticleNumber) REFERENCES Products (ArticleNumber),
-    FOREIGN KEY (CategoryName) REFERENCES Categorys (Name)
+    ProductId INT NOT NULL,
+    CategoryId INT NOT NULL,
+    PRIMARY KEY (ProductId, CategoryId),
+    FOREIGN KEY (ProductId) REFERENCES Products (Id),
+    FOREIGN KEY (CategoryId) REFERENCES Categorys (Id)
 )
 
 CREATE TABLE CategoryToCategory (
-    ParentCategory NVARCHAR(50) NOT NULL,
-    ChildCategory NVARCHAR(50) NOT NULL,
-    UNIQUE (ChildCategory),
-    FOREIGN KEY (ParentCategory) REFERENCES Categorys (Name),
-    FOREIGN KEY (ChildCategory) REFERENCES Categorys (Name)
+    ParentCategoryId INT NOT NULL,
+    ChildCategoryId INT NOT NULL,
+    FOREIGN KEY (ParentCategoryId) REFERENCES Categorys (Id),
+    FOREIGN KEY (ChildCategoryId) REFERENCES Categorys (Id)
 )
