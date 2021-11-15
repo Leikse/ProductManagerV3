@@ -1,4 +1,6 @@
-﻿namespace ProductManager
+﻿using System.Collections.Generic;
+
+namespace ProductManager
 {
     public class Product
     {
@@ -13,6 +15,7 @@
 
         public int Price { get; }
 
+        public IList<Category> CategoryList { get; set; } = new List<Category>();
         public Product(int id, string articleNumber, string name, string description, string url, int price)
         {
             Id = id;

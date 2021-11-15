@@ -9,8 +9,6 @@ SELECT * FROM Categorys
 
 SELECT * FROM CategoryProduct
 
-SELECT * FROM CategoryToCategory
-
 SELECT * FROM Logins
 
 CREATE TABLE Products (
@@ -28,7 +26,9 @@ CREATE TABLE Categorys (
     Name NVARCHAR(50), 
     Description NVARCHAR(50) NOT NULL,
     Url NVARCHAR(50) NOT NULL,
+    ParentCategoryId INT,
     PRIMARY KEY (Id),
+    FOREIGN KEY (ParentCategoryId) REFERENCES Categorys (Id)
 )
 
 CREATE TABLE Logins (
@@ -45,9 +45,10 @@ CREATE TABLE CategoryProduct (
     FOREIGN KEY (CategoryId) REFERENCES Categorys (Id)
 )
 
-CREATE TABLE CategoryToCategory (
-    ParentCategoryId INT NOT NULL,
-    ChildCategoryId INT NOT NULL,
-    FOREIGN KEY (ParentCategoryId) REFERENCES Categorys (Id),
-    FOREIGN KEY (ChildCategoryId) REFERENCES Categorys (Id)
-)
+--CREATE TABLE CategoryToCategory (
+   -- ParentCategoryId INT NOT NULL,
+   -- ChildCategoryId INT NOT NULL,
+   -- FOREIGN KEY (ParentCategoryId) REFERENCES Categorys (Id),
+    --FOREIGN KEY (ChildCategoryId) REFERENCES Categorys (Id),
+    -- TODO lägg till primärnyckel
+--)
