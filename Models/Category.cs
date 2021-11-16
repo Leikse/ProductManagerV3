@@ -25,6 +25,5 @@ namespace ProductManager
         public string Description { get; set; }
         public string Url { get; set; }
         public int ParentCategoryId { get; set; }
-        public IList<Product> Products { get; set; } = new List<Product>();
     }
 }

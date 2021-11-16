@@ -768,28 +768,118 @@ namespace ProductManager
             WriteLine("Name\t\tPrice");
             WriteLine("------------------------------------------------------------------------------");
 
-            
+            var parentCategorys = FindParentCategory();
 
+            var parentCategoryDoesntExist = parentCategorys == null;
 
+            if (!parentCategoryDoesntExist)
+            {
+                foreach (var parentCategory in parentCategorys)
+                {
+                    WriteLine($"{parentCategory.Name}");
 
-            //GetCategoryWithChildren();
+                    var childCategorys = FindChildCategory();
 
-            // TODO: Change to list from SQL instead of List
-            //categoryList.ForEach(category =>
-            //{
-            //    var numberOfProducts = category.ProductList != null ? category.ProductList.Count().ToString() : "0";
+                    var childCategoryDoesntExist = childCategorys == null;
 
-            //    WriteLine($"{category.Name} ({numberOfProducts})");
-
-            //    foreach (var product in category.ProductList)
-            //    {
-            //        WriteLine($"  {product.Value.Name}\t\t{product.Value.Price}");
-            //    }
-            //});
+                    if (!childCategoryDoesntExist)
+                    {
+                        foreach (var childCategory in childCategorys)
+                        {
+                            WriteLine($"  {childCategory.Name}");
+                        }
+                        
+                    }
+                }
+            }
+            else
+            {
+                WriteLine("Parent category doesn't exist");
+            }
 
             while (ReadKey(true).Key != ConsoleKey.Escape) ;
 
             Clear();
+        }
+
+        private static IList<Category> FindChildCategory()
+        {
+            string sql = @"
+                        SELECT Id,
+                               Name,
+                               Description,
+                               Url,
+                               ParentCategoryId
+                        FROM Categorys
+                        WHERE ParentCategoryId IS NOT NULL
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+            using var command = new SqlCommand(sql, connection);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            List<Category> parentCategoryList = new List<Category>();
+
+            while (dataReader.Read())
+            {
+
+                var id = (int)dataReader["Id"];
+                var name = (string)dataReader["Name"];
+                var description = (string)dataReader["Description"];
+                var url = (string)dataReader["Url"];
+                var parentCategoryId = (int)(dataReader["ParentCategoryId"] as int?).GetValueOrDefault();
+
+                Category category = new Category(name, description, url, id, parentCategoryId);
+
+                parentCategoryList.Add(category);
+            }
+
+            connection.Close();
+
+            return parentCategoryList;
+        }
+
+        private static IList<Category> FindParentCategory()
+        {
+            string sql = @"
+                        SELECT Id,
+                               Name,
+                               Description,
+                               Url,
+                               ParentCategoryId
+                        FROM Categorys
+                        WHERE ParentCategoryId IS NULL
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+            using var command = new SqlCommand(sql, connection);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            List<Category> parentCategoryList = new List<Category>();
+
+            while (dataReader.Read())
+            {
+
+                var id = (int) dataReader["Id"];
+                var name = (string) dataReader["Name"];
+                var description = (string)dataReader["Description"];
+                var url = (string)dataReader["Url"];
+                var parentCategoryId = (int)(dataReader["ParentCategoryId"] as int?).GetValueOrDefault();
+
+                Category category = new Category(name, description, url, id, parentCategoryId);
+
+                parentCategoryList.Add(category);
+            }
+
+            connection.Close();
+
+            return parentCategoryList;
         }
 
         private static void AddCategoryToCategory()
