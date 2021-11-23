@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -199,7 +198,6 @@ namespace ProductManager
             connection.Close();
 
             return login;
-
         }
 
         private static void AddProduct()
@@ -357,7 +355,7 @@ namespace ProductManager
 
             Clear();
             
-            var products = FindProductList();
+            var products = FindProductList(articleNumber);
 
             var productNotExists = products == null;
 
@@ -435,9 +433,12 @@ namespace ProductManager
                                     {
                                         case ConsoleKey.Y:
 
-                                            DeleteProduct(articleNumber);
+                                            foreach (var product in products)
+                                            {
+                                                DeleteCategory(product.Id);
+                                            }
 
-                                            DeleteCategory(articleNumber);
+                                            DeleteProduct(articleNumber);
 
                                             WriteLine("Product deleted");
 
@@ -500,16 +501,16 @@ namespace ProductManager
             connection.Close();
         }
 
-        private static void DeleteCategory(string articleNumber)
+        private static void DeleteCategory(int productId)
         {
             string sql = @"
-                         DELETE FROM CategoryProduct WHERE ProductArticleNumber = @ProductArticleNumber
+                   DELETE FROM CategoryProduct WHERE ProductId = @productId
                                 ";
 
             using SqlConnection connection = new(connectionString);
             using SqlCommand command = new(sql, connection);
 
-            command.Parameters.AddWithValue("@ProductArticleNumber", articleNumber);
+            command.Parameters.AddWithValue("@productId", productId);
 
             connection.Open();
 
@@ -518,7 +519,7 @@ namespace ProductManager
             connection.Close();
         }
 
-        private static IList<Product> FindProductList()
+        private static IList<Product> FindProductList(string inputArticleNumber)
         {
             string sql = @"
                 SELECT Id,
@@ -528,10 +529,13 @@ namespace ProductManager
                        Url,
                        Price
                   FROM Products
+                 WHERE ArticleNumber = @inputArticleNumber
             ";
 
             using SqlConnection connection = new(connectionString);
             using SqlCommand command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@inputArticleNumber", inputArticleNumber);
 
             connection.Open();
 
@@ -587,7 +591,6 @@ namespace ProductManager
 
                 if (input.Key == ConsoleKey.Y)
                 {
-                    //categoryList.Add(category);
                     SaveCategory(category);
 
                     WriteLine("Category added");
@@ -729,7 +732,8 @@ namespace ProductManager
                         SELECT Id,
                                Name,
                                Description,
-                               Url
+                               Url,
+                               ParentCategoryId
                         FROM Categorys
                         WHERE Name = @Name
             ";
@@ -753,7 +757,7 @@ namespace ProductManager
                     name: (string) dataReader["Name"],
                     description: (string) dataReader["Description"],
                     url: (string) dataReader["Url"],
-                    parentCategoryId: (int) dataReader["ParentCategoryId"]);
+                    parentCategoryId: (int) (dataReader["ParentCategoryId"] as int?).GetValueOrDefault());
             }
 
             connection.Close();
@@ -766,43 +770,139 @@ namespace ProductManager
             CursorVisible = false;
 
             WriteLine("Name\t\tPrice");
-            WriteLine("------------------------------------------------------------------------------");
+            WriteLine("------------------------------------------------------------------------");
 
-            var parentCategorys = FindParentCategory();
+            List <Category> rootCategories = FindRootCategory();
 
-            var parentCategoryDoesntExist = parentCategorys == null;
-
-            if (!parentCategoryDoesntExist)
+            rootCategories.ForEach(rootCategory => 
             {
-                foreach (var parentCategory in parentCategorys)
-                {
-                    WriteLine($"{parentCategory.Name}");
+                var childCategories = FindChildCategoriesList(rootCategory.Id);
+                rootCategory.CategoryInCategory = childCategories;
 
-                    var childCategorys = FindChildCategory();
+                var amountOfProducts = FindAmountOfProducts(rootCategory);
 
-                    var childCategoryDoesntExist = childCategorys == null;
+                WriteLine($"{rootCategory.Name} ({amountOfProducts})");
 
-                    if (!childCategoryDoesntExist)
-                    {
-                        foreach (var childCategory in childCategorys)
-                        {
-                            WriteLine($"  {childCategory.Name}");
-                        }
-                        
-                    }
-                }
-            }
-            else
-            {
-                WriteLine("Parent category doesn't exist");
-            }
+                PrintChildCategory(rootCategory);
+            });
 
-            while (ReadKey(true).Key != ConsoleKey.Escape) ;
+            while (ReadKey(true).Key != ConsoleKey.Escape);
 
             Clear();
         }
 
-        private static IList<Category> FindChildCategory()
+        public static void PrintChildCategory(Category category, int level = 0)
+        {
+            var childCategories = category.CategoryInCategory;
+            if (childCategories == null) return;
+
+            var spaces = "";
+
+            for (int i = 0; i < level; i++)
+            {
+                spaces += "  ";
+            }
+
+            childCategories.ForEach(category =>
+            {
+                WriteLine($"{spaces}  {category.Name}");
+
+                PrintProducts(category, level + 1);
+
+                if (category.CategoryInCategory == null || category.CategoryInCategory.Count() < 1)
+                {
+                    return;
+                }
+               
+                PrintChildCategory(category, level + 1);
+            });
+        }
+
+        public static void PrintProducts(Category category, int level = 0)
+        {
+            var childProducts = category.ProductInCategory;
+            if (childProducts == null) return;
+
+            var spaces = "";
+
+            for (int i = 0; i < level; i++)
+            {
+                spaces += "   ";
+            }
+
+            childProducts.ForEach(product =>
+            {
+                WriteLine($"{spaces}  {product.Name}      {product.Price}");
+            });
+        }
+
+        public static int FindAmountOfProducts(Category category)
+        {
+            var childCategories = category.CategoryInCategory;
+            if (childCategories == null) return 0;
+
+            var totalProductsCounter = 0;
+
+            childCategories.ForEach(category =>
+            {
+                var products = category.ProductInCategory;
+
+                var numberOfProducts = products.Count();
+
+                var numberOfChildProducts = FindAmountOfProducts(category);
+
+                totalProductsCounter += numberOfProducts + numberOfChildProducts;
+            });
+
+            return totalProductsCounter;
+        }
+
+        private static List<Product> FindProductsForCategories(int category)
+        {
+            string sql = @"
+                        SELECT Products.Id,
+                               Products.ArticleNumber,
+                               Products.Name,
+                               Products.Description,
+                               Products.Url,
+                               Products.Price
+                        FROM Products
+                        INNER JOIN CategoryProduct 
+                                ON CategoryProduct.ProductId = Products.Id
+                             WHERE CategoryProduct.CategoryId = @category
+            ";
+
+            using var connection = new SqlConnection(connectionString);
+            using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@category", category);
+
+            connection.Open();
+
+            var dataReader = command.ExecuteReader();
+
+            List<Product> childProductsList = new List<Product>();
+
+            while (dataReader.Read())
+            {
+                var id = (int)dataReader["Id"];
+                var articleNumber = (string)dataReader["ArticleNumber"];
+                var name = (string)dataReader["Name"];
+                var description = (string)dataReader["Description"];
+                var url = (string)dataReader["Url"];
+                var price = (int)dataReader["Price"];
+
+                Product product = new Product(id, articleNumber, name, description, url, price);
+
+                childProductsList.Add(product);
+            }
+
+            connection.Close();
+
+            return childProductsList;
+        }
+
+        private static List<Category> FindChildCategoriesList(int parentId)
         {
             string sql = @"
                         SELECT Id,
@@ -811,11 +911,13 @@ namespace ProductManager
                                Url,
                                ParentCategoryId
                         FROM Categorys
-                        WHERE ParentCategoryId IS NOT NULL
+                        WHERE ParentCategoryId = @parentId
             ";
 
             using var connection = new SqlConnection(connectionString);
             using var command = new SqlCommand(sql, connection);
+
+            command.Parameters.AddWithValue("@parentId", parentId);
 
             connection.Open();
 
@@ -825,7 +927,6 @@ namespace ProductManager
 
             while (dataReader.Read())
             {
-
                 var id = (int)dataReader["Id"];
                 var name = (string)dataReader["Name"];
                 var description = (string)dataReader["Description"];
@@ -837,12 +938,23 @@ namespace ProductManager
                 parentCategoryList.Add(category);
             }
 
+            if (parentCategoryList == null) return null;
+
+            parentCategoryList.ForEach(category => 
+            {
+                var parentCategoryList = FindChildCategoriesList(category.Id);
+                category.CategoryInCategory = parentCategoryList;
+
+                var products = FindProductsForCategories(category.Id);
+                category.ProductInCategory = products;
+            });
+
             connection.Close();
 
             return parentCategoryList;
         }
 
-        private static IList<Category> FindParentCategory()
+        private static List<Category> FindRootCategory()
         {
             string sql = @"
                         SELECT Id,
@@ -865,9 +977,8 @@ namespace ProductManager
 
             while (dataReader.Read())
             {
-
-                var id = (int) dataReader["Id"];
-                var name = (string) dataReader["Name"];
+                var id = (int)dataReader["Id"];
+                var name = (string)dataReader["Name"];
                 var description = (string)dataReader["Description"];
                 var url = (string)dataReader["Url"];
                 var parentCategoryId = (int)(dataReader["ParentCategoryId"] as int?).GetValueOrDefault();
@@ -970,7 +1081,6 @@ namespace ProductManager
             ";
 
             using var connection = new SqlConnection(connectionString);
-
             using var command = new SqlCommand(sql, connection);
 
             command.Parameters.AddWithValue("@CategoryName", categoryName);

@@ -12,3 +12,7 @@ INSERT INTO Categorys (Name, Description, Url)
 VALUES
 ('Kläder', 'Blå', 'Blå'),
 ('Tröjor', 'Grön', 'Grön')
+
+DELETE FROM Products WHERE Id = '7'
+
+DELETE FROM CategoryProduct WHERE ProductId = '7'

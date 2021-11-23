@@ -15,7 +15,7 @@ CREATE TABLE Products (
     Id INT IDENTITY,
 	ArticleNumber NVARCHAR(50),
     Name NVARCHAR(50) NOT NULL,
-    Description NVARCHAR(50) NOT NULL,
+    Description NVARCHAR(50) NOT NULL, 
     Url NVARCHAR(50) NOT NULL,
     Price INT NOT NULL,
     PRIMARY KEY (Id)
@@ -39,7 +39,7 @@ CREATE TABLE Logins (
 
 CREATE TABLE CategoryProduct (
     ProductId INT NOT NULL,
-    CategoryId INT NOT NULL,
+    CategoryId INT NOT NULL,    
     PRIMARY KEY (ProductId, CategoryId),
     FOREIGN KEY (ProductId) REFERENCES Products (Id),
     FOREIGN KEY (CategoryId) REFERENCES Categorys (Id)
