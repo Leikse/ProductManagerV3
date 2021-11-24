@@ -8,6 +8,18 @@ using ProductManager.Models;
 
 namespace ProductManager
 {
+    enum MainMenu
+    { 
+        AddProduct,
+        SearchProduct,
+        AddCategory,
+        AddProductToCategory,
+        ListCategories,
+        AddCategoryToCategory,
+        Logout,
+        Exit
+    }
+
     class Program
     {
         static string connectionString = "Server=.;Database=ProductManager;Integrated Security=True";
@@ -37,89 +49,98 @@ namespace ProductManager
                 WriteLine("7. Logout");
                 WriteLine("8. Exit");
 
-
-                ConsoleKeyInfo userInput;
-
-                bool invalidChoice;
-
-                do
+                MainMenu menuChoice = AwaitUserChoice(new Dictionary<ConsoleKey, MainMenu>
                 {
-                    userInput = ReadKey(true);
-
-                    invalidChoice = !(userInput.Key == ConsoleKey.D1 || userInput.Key == ConsoleKey.NumPad1 
-                                                                     || userInput.Key == ConsoleKey.D2 || userInput.Key == ConsoleKey.NumPad2
-                                                                     || userInput.Key == ConsoleKey.D3 || userInput.Key == ConsoleKey.NumPad3
-                                                                     || userInput.Key == ConsoleKey.D4 || userInput.Key == ConsoleKey.NumPad4
-                                                                     || userInput.Key == ConsoleKey.D5 || userInput.Key == ConsoleKey.NumPad5
-                                                                     || userInput.Key == ConsoleKey.D6 || userInput.Key == ConsoleKey.NumPad6
-                                                                     || userInput.Key == ConsoleKey.D7 || userInput.Key == ConsoleKey.NumPad7
-                                                                     || userInput.Key == ConsoleKey.D8 || userInput.Key == ConsoleKey.NumPad8);
-
-                } while (invalidChoice);
+                    { ConsoleKey.D1, MainMenu.AddProduct },
+                    { ConsoleKey.NumPad1, MainMenu.AddProduct },
+                    { ConsoleKey.D2, MainMenu.SearchProduct },
+                    { ConsoleKey.NumPad2, MainMenu.SearchProduct },
+                    { ConsoleKey.D3, MainMenu.AddCategory },
+                    { ConsoleKey.NumPad3, MainMenu.AddCategory },
+                    { ConsoleKey.D4, MainMenu.AddProductToCategory },
+                    { ConsoleKey.NumPad4, MainMenu.AddProductToCategory },
+                    { ConsoleKey.D5, MainMenu.ListCategories },
+                    { ConsoleKey.NumPad5, MainMenu.ListCategories },
+                    { ConsoleKey.D6, MainMenu.AddCategoryToCategory },
+                    { ConsoleKey.NumPad6, MainMenu.AddCategoryToCategory },
+                    { ConsoleKey.D7, MainMenu.Logout },
+                    { ConsoleKey.NumPad7, MainMenu.Logout },
+                    { ConsoleKey.D8, MainMenu.Exit },
+                    { ConsoleKey.NumPad8, MainMenu.Exit }
+                });
 
                 CursorVisible = true;
 
                 Clear();
 
-                switch (userInput.Key)
+                switch (menuChoice)
                 {
-                    case ConsoleKey.D1:
-                    case ConsoleKey.NumPad1:
+                    case MainMenu.AddProduct:
                     {
                         AddProduct();
                     }
                         break;
 
-                    case ConsoleKey.D2:
-                    case ConsoleKey.NumPad2:
+                    case MainMenu.SearchProduct:
                     {
                         ListProduct();
                     }
                         break;
 
-                    case ConsoleKey.D3:
-                    case ConsoleKey.NumPad3:
+                    case MainMenu.AddCategory:
                     {
                         AddCategory();
                     }
                         break;
 
-                    case ConsoleKey.D4:
-                    case ConsoleKey.NumPad4:
+                    case MainMenu.AddProductToCategory:
                     {
                         AddProductToCategory();
                     }
                         break;
 
-                    case ConsoleKey.D5:
-                    case ConsoleKey.NumPad5:
+                    case MainMenu.ListCategories:
                     {
                         ListCategories();
                     }
                         break;
 
-                    case ConsoleKey.D6:
-                    case ConsoleKey.NumPad6:
+                    case MainMenu.AddCategoryToCategory:
                     {
                         AddCategoryToCategory();
                     }
                         break;
 
-                    case ConsoleKey.D7:
-                    case ConsoleKey.NumPad7:
+                    case MainMenu.Logout:
                     {
                         isAuthenticated = false;
                     }
                         break;
 
-                    case ConsoleKey.D8:
-                    case ConsoleKey.NumPad8:
+                    case MainMenu.Exit:
                     {
                         isRunning = false;
                     }
                         break;
                 }
             } while (isRunning);
+        }
+
+        private static MainMenu AwaitUserChoice(Dictionary<ConsoleKey, MainMenu> userChoice)
+        {
+            ConsoleKeyInfo input;
+
+            bool invalidChoice;
+
+            do
+            {
+                input = ReadKey(true);
+
+                invalidChoice = !userChoice.ContainsKey(input.Key);
+
+            } while (invalidChoice);
+
+            return userChoice[input.Key];
         }
 
         static bool AuthenticateUser()
