@@ -17,7 +17,7 @@ CREATE TABLE Products (
     Name NVARCHAR(50) NOT NULL,
     Description NVARCHAR(50) NOT NULL, 
     Url NVARCHAR(50) NOT NULL,
-    Price INT NOT NULL,
+    Price DECIMAL NOT NULL, -- INT right now, needs to drop first
     PRIMARY KEY (Id)
 )
 
@@ -44,11 +44,3 @@ CREATE TABLE CategoryProduct (
     FOREIGN KEY (ProductId) REFERENCES Products (Id),
     FOREIGN KEY (CategoryId) REFERENCES Categorys (Id)
 )
-
---CREATE TABLE CategoryToCategory (
-   -- ParentCategoryId INT NOT NULL,
-   -- ChildCategoryId INT NOT NULL,
-   -- FOREIGN KEY (ParentCategoryId) REFERENCES Categorys (Id),
-    --FOREIGN KEY (ChildCategoryId) REFERENCES Categorys (Id),
-    -- TODO lägg till primärnyckel
---)
