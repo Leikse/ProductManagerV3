@@ -1,21 +1,29 @@
-﻿using System.Collections.Generic;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace ProductManager
+namespace ProductManager.Models
 {
     public class Product
     {
-        public int Id { get; }
-        public string ArticleNumber { get; }
+        public int Id { get; protected set; }
 
-        public string Name { get; }
+        [Required]
+        [MaxLength(10)]
+        public string ArticleNumber { get; protected set; }
 
-        public string Description { get; } 
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; protected set; }
 
-        public string Url { get; }
+        [MaxLength(50)]
+        public string Description { get; protected set; } 
 
-        public int Price { get; }
+        [MaxLength(100)]
+        public string Url { get; protected set; }
 
-        public Product(int id, string articleNumber, string name, string description, string url, int price)
+        [MaxLength(10)]
+        public decimal Price { get; protected set; }
+
+        public Product(int id, string articleNumber, string name, string description, string url, decimal price)
         {
             Id = id;
             ArticleNumber = articleNumber;
@@ -25,7 +33,7 @@ namespace ProductManager
             Price = price;
         }
 
-        public Product(string articleNumber, string name, string description, string url, int price)
+        public Product(string articleNumber, string name, string description, string url, decimal price)
         {
             ArticleNumber = articleNumber;
             Name = name;

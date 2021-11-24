@@ -1,9 +1,17 @@
-﻿namespace ProductManager.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ProductManager.Models
 {
     public class Login
     {
-        public string Username { get; }
-        public string Password { get; }
+        [Key]
+        [Required]
+        [MaxLength(50)]
+        public string Username { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Password { get; set; }
 
         public Login(string username, string password)
         {

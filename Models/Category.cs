@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
-namespace ProductManager
+namespace ProductManager.Models
 {
     public class Category
     {
@@ -24,11 +25,20 @@ namespace ProductManager
             ProductInCategory = new List<Product>();
         }
 
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Url { get; set; }
-        public int ParentCategoryId { get; set; }
+        public int Id { get; protected set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string Name { get; protected set; }
+
+        [MaxLength(100)]
+        public string Description { get; protected set; }
+
+        [MaxLength(100)]
+        public string Url { get; protected set; }
+
+        [MaxLength(10)]
+        public int ParentCategoryId { get; protected set; }
         public List<Category> CategoryInCategory { get; set; }
         public List<Product> ProductInCategory { get; set; }
     }

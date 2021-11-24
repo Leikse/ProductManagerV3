@@ -5,6 +5,7 @@ using System.Threading;
 using static System.Console;
 using Microsoft.Data.SqlClient;
 using ProductManager.Models;
+using ProductManager.Data;
 
 namespace ProductManager
 {
@@ -22,7 +23,8 @@ namespace ProductManager
 
     class Program
     {
-        static string connectionString = "Server=.;Database=ProductManager;Integrated Security=True";
+        // TODO: Remove
+        static string connectionString;
 
         static void Main(string[] args)
         {
@@ -190,34 +192,11 @@ namespace ProductManager
 
         private static Login FindLogin(string username)
         {
-            string sql = @"
-                SELECT Username,
-                       Password
-                FROM Logins
-               WHERE Username = @Username
-            ";
+            using var context = new ProductManagerContext();
 
-            using var connection = new SqlConnection(connectionString);
-
-            using var command = new SqlCommand(sql, connection);
-
-            command.Parameters.AddWithValue("@Username", username);
-
-            connection.Open();
-
-            var dataReader = command.ExecuteReader();
-
-            Login login = null;
-
-            if (dataReader.Read())
-            {
-                login = new Login(
-                    username: (string) dataReader["Username"],
-                    password: (string) dataReader["Password"]);
-            }
-
-            connection.Close();
-
+            var login = context.Logins
+                .FirstOrDefault(x => x.Username == username);
+            
             return login;
         }
 
@@ -269,41 +248,10 @@ namespace ProductManager
 
         static Product FindProduct(string articleNumber)
         {
-            string sql = @"
-                        SELECT Id,
-                               ArticleNumber,
-                               Name,
-                               Description,
-                               Url,
-                               Price
-                        FROM Products
-                        WHERE ArticleNumber = @ArticleNumber
-            ";
+            using var context = new ProductManagerContext();
 
-            using var connection = new SqlConnection(connectionString);
-
-            using var command = new SqlCommand(sql, connection);
-
-            command.Parameters.AddWithValue("@ArticleNumber", articleNumber);
-
-            connection.Open();
-
-            var dataReader = command.ExecuteReader();
-
-            Product product = null;
-
-            if (dataReader.Read())
-            {
-                product = new Product(
-                    id: (int) dataReader["Id"],
-                    articleNumber: (string) dataReader["ArticleNumber"],
-                    name: (string) dataReader["Name"],
-                    description: (string) dataReader["Description"],
-                    url: (string) dataReader["Url"],
-                    price: (int) dataReader["Price"]);
-            }
-
-            connection.Close();
+            Product product = context.Products
+                .FirstOrDefault(x => x.ArticleNumber == articleNumber);
 
             return product;
         }
@@ -337,35 +285,11 @@ namespace ProductManager
 
         private static void SaveProduct(Product product)
         {
-            string sql = @"
-                         INSERT INTO Products (
-                                     ArticleNumber, 
-                                     Name, 
-                                     Description, 
-                                     Url, 
-                                     Price
-                                ) VALUES (
-                                     @ArticleNumber, 
-                                     @Name, 
-                                     @Description, 
-                                     @Url, 
-                                     @Price
-                                )";
+            using var context = new ProductManagerContext();
 
-            using SqlConnection connection = new(connectionString);
-            using SqlCommand command = new(sql, connection);
+            context.Products.Add(product);
 
-            command.Parameters.AddWithValue("@ArticleNumber", product.ArticleNumber);
-            command.Parameters.AddWithValue("@Name", product.Name);
-            command.Parameters.AddWithValue("@Description", product.Description);
-            command.Parameters.AddWithValue("@Url", product.Url);
-            command.Parameters.AddWithValue("@Price", product.Price);
-
-            connection.Open();
-
-            command.ExecuteNonQuery();
-
-            connection.Close();
+            context.SaveChanges();
         }
 
         static void ListProduct()
