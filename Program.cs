@@ -85,6 +85,7 @@ namespace ProductManager
 
                     case MainMenu.SearchProduct:
                     {
+                        // TODO: Need fixes 
                         ListProduct();
                     }
                         break;
@@ -430,6 +431,7 @@ namespace ProductManager
 
         private static void DeleteProduct(string articleNumber)
         {
+            // TODO: Change to EF Core
             string sql = @"
                          DELETE FROM Products WHERE ArticleNumber = @ArticleNumber
                                 ";
@@ -448,6 +450,7 @@ namespace ProductManager
 
         private static void DeleteCategory(int productId)
         {
+            // TODO: Change to EF Core
             string sql = @"
                    DELETE FROM CategoryProduct WHERE ProductId = @productId
                                 ";
@@ -466,43 +469,9 @@ namespace ProductManager
 
         private static IList<Product> FindProductList(string inputArticleNumber)
         {
-            string sql = @"
-                SELECT Id,
-                       ArticleNumber,
-                       Name,
-                       Description,
-                       Url,
-                       Price
-                  FROM Products
-                 WHERE ArticleNumber = @inputArticleNumber
-            ";
+            using var context = new ProductManagerContext();
 
-            using SqlConnection connection = new(connectionString);
-            using SqlCommand command = new SqlCommand(sql, connection);
-
-            command.Parameters.AddWithValue("@inputArticleNumber", inputArticleNumber);
-
-            connection.Open();
-
-            var dataReader = command.ExecuteReader();
-
-            List<Product> productList = new List<Product>();
-
-            while (dataReader.Read())
-            {
-                var id = (int) dataReader["Id"];
-                var articleNumber = (string) dataReader["ArticleNumber"];
-                var name = (string) dataReader["Name"];
-                var description = (string) dataReader["Description"];
-                var url = (string) dataReader["Url"];
-                var price = (int) dataReader["Price"];
-
-                Product product = new Product(id, articleNumber, name, description, url, price);
-
-                productList.Add(product);
-            }
-
-            connection.Close();
+            var productList = context.Products.ToList();
 
             return productList;
         }
@@ -574,27 +543,11 @@ namespace ProductManager
 
         private static void SaveCategory(Category category)
         {
-            string sql = @"INSERT INTO Categorys (
-                         Name,
-                         Description,
-                         Url
-                         ) VALUES (
-                         @Name,
-                         @Description,
-                         @Url)";
+            using var context = new ProductManagerContext();
 
-            using SqlConnection connection = new(connectionString);
-            using SqlCommand command = new(sql, connection);
+            context.Categories.Add(category);
 
-            command.Parameters.AddWithValue("@Name", category.Name);
-            command.Parameters.AddWithValue("@Description", category.Description);
-            command.Parameters.AddWithValue("@Url", category.Url);
-
-            connection.Open();
-
-            command.ExecuteNonQuery();
-
-            connection.Close();
+            context.SaveChanges();
         }
 
         static void AddProductToCategory()

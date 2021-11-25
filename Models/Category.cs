@@ -38,7 +38,7 @@ namespace ProductManager.Models
         public string Url { get; protected set; }
 
         [MaxLength(10)]
-        public int ParentCategoryId { get; protected set; }
+        public int? ParentCategoryId { get; protected set; }
         public List<Category> CategoryInCategory { get; set; }
         public List<Product> ProductInCategory { get; set; }
     }
