@@ -288,7 +288,7 @@ namespace ProductManager
         {
             using var context = new ProductManagerContext();
 
-            context.Products.Add(product);
+            //context.Products.Add(product);
 
             context.SaveChanges();
         }
@@ -432,8 +432,6 @@ namespace ProductManager
 
         private static void DeleteProduct(string articleNumber)
         {
-            // TODO: Change to EF Core
-
             using var context = new ProductManagerContext();
 
             var productToRemove = context.Products.SingleOrDefault(x => x.ArticleNumber == articleNumber);

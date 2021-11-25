@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProductManager.Models
 {
@@ -6,7 +7,14 @@ namespace ProductManager.Models
     {
         [Key]
         public int ProductId { get; protected set; }
+        [Required]
         public int CategoryId { get; protected set; }
+
+        [ForeignKey("ProductId")]
+        public Product product { get; protected set; }
+
+        [ForeignKey("CategoryId")]
+        public Category category { get; protected set; }
 
         public CategoryProduct(int productId, int categoryId)
         {

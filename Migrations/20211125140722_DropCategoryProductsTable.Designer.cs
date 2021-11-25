@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProductManager.Data;
 
@@ -11,9 +12,10 @@ using ProductManager.Data;
 namespace ProductManager.Migrations
 {
     [DbContext(typeof(ProductManagerContext))]
-    partial class ProductManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20211125140722_DropCategoryProductsTable")]
+    partial class DropCategoryProductsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,21 +54,6 @@ namespace ProductManager.Migrations
                     b.HasIndex("ParentCategoryId");
 
                     b.ToTable("Categories");
-                });
-
-            modelBuilder.Entity("ProductManager.Models.CategoryProduct", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("CategoryProducts");
                 });
 
             modelBuilder.Entity("ProductManager.Models.Login", b =>
@@ -132,25 +119,6 @@ namespace ProductManager.Migrations
                         .HasForeignKey("ParentCategoryId");
 
                     b.Navigation("category");
-                });
-
-            modelBuilder.Entity("ProductManager.Models.CategoryProduct", b =>
-                {
-                    b.HasOne("ProductManager.Models.Category", "category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProductManager.Models.Product", "product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("category");
-
-                    b.Navigation("product");
                 });
 
             modelBuilder.Entity("ProductManager.Models.Product", b =>

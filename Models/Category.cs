@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ProductManager.Models
 {
@@ -39,6 +40,9 @@ namespace ProductManager.Models
 
         [MaxLength(10)]
         public int? ParentCategoryId { get; protected set; }
+
+        [ForeignKey("ParentCategoryId")]
+        public Category category { get; protected set; }
         public List<Category> CategoryInCategory { get; set; }
         public List<Product> ProductInCategory { get; set; }
     }
