@@ -8,7 +8,7 @@ namespace ProductManager.Models
 
         [Required]
         [MaxLength(10)]
-        public string ArticleNumber { get; protected set; }
+        public string ArticleNumber { get; set; }
 
         [Required]
         [MaxLength(50)]
