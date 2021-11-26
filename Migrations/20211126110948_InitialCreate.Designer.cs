@@ -12,8 +12,8 @@ using ProductManager.Data;
 namespace ProductManager.Migrations
 {
     [DbContext(typeof(ProductManagerContext))]
-    [Migration("20211125140900_UpdatedCategoryProductsTable")]
-    partial class UpdatedCategoryProductsTable
+    [Migration("20211126110948_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

@@ -17,30 +17,16 @@ namespace ProductManager.Migrations
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Url = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    ParentCategoryId = table.Column<int>(type: "int", maxLength: 10, nullable: true),
-                    CategoryId = table.Column<int>(type: "int", nullable: true)
+                    ParentCategoryId = table.Column<int>(type: "int", maxLength: 10, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Categories_Categories_CategoryId",
-                        column: x => x.CategoryId,
+                        name: "FK_Categories_Categories_ParentCategoryId",
+                        column: x => x.ParentCategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CategoryProducts",
-                columns: table => new
-                {
-                    ProductId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CategoryId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CategoryProducts", x => x.ProductId);
                 });
 
             migrationBuilder.CreateTable(
@@ -78,9 +64,38 @@ namespace ProductManager.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CategoryProducts",
+                columns: table => new
+                {
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CategoryProducts", x => x.ProductId);
+                    table.ForeignKey(
+                        name: "FK_CategoryProducts_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CategoryProducts_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
-                name: "IX_Categories_CategoryId",
+                name: "IX_Categories_ParentCategoryId",
                 table: "Categories",
+                column: "ParentCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CategoryProducts_CategoryId",
+                table: "CategoryProducts",
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(

@@ -7,7 +7,7 @@ namespace ProductManager.Models
     {
         [Key]
         public int ProductId { get; protected set; }
-        [Required]
+
         public int CategoryId { get; protected set; }
 
         [ForeignKey("ProductId")]

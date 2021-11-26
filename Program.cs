@@ -379,11 +379,11 @@ namespace ProductManager
                                     {
                                         case ConsoleKey.Y:
 
-                                            // TODO: Fix so products delete from category after product to category works
-                                            //foreach (var product in products)
-                                            //{
-                                            //    DeleteCategory(product.Id);
-                                            //}
+                                        // TODO: Fix so products delete from category after product to category works
+                                            foreach (var product in products)
+                                            {
+                                                DeleteCategory(product.Id);
+                                            }
 
                                             DeleteProduct(articleNumber);
 
@@ -446,15 +446,15 @@ namespace ProductManager
         private static void DeleteCategory(int productId)
         {
             // TODO: Change to EF Core
-            //using var context = new ProductManagerContext();
+            using var context = new ProductManagerContext();
 
-            //var productToRemove = context.Categories.SingleOrDefault(x => x.ProductId == productId);
+            var productToRemove = context.CategoryProducts.SingleOrDefault(x => x.ProductId == productId);
 
-            //if (productToRemove != null)
-            //{
-            //    context.Products.Remove(productToRemove);
-            //    context.SaveChanges();
-            //}
+            if (productToRemove != null)
+            {
+                context.CategoryProducts.Remove(productToRemove);
+                context.SaveChanges();
+            }
         }
 
         private static IList<Product> FindProductList(string inputArticleNumber)
@@ -597,10 +597,14 @@ namespace ProductManager
             // TODO: Doesn't work
             using var context = new ProductManagerContext();
 
-            context.Categories.Add(category);
-            context.Products.Add(product);
+            CategoryProduct categoryProduct = new CategoryProduct(category.Id, product.Id);
+
+            context.CategoryProducts.Add(categoryProduct);
 
             context.SaveChanges();
+
+
+
             //string sql = @"INSERT INTO CategoryProduct (
             //             ProductId,
             //             CategoryId
@@ -973,44 +977,63 @@ namespace ProductManager
 
         private static Category FindIfCategoryExist(string categoryName)
         {
-            string sql = @"
-                        SELECT *
-                        FROM Categorys
-                        WHERE Name = @CategoryName 
-            ";
+            using var context = new ProductManagerContext();
 
-            using var connection = new SqlConnection(connectionString);
-            using var command = new SqlCommand(sql, connection);
+            var category = context.Categories.FirstOrDefault(x => x.Name == categoryName);
 
-            command.Parameters.AddWithValue("@CategoryName", categoryName);
-
-            connection.Open();
-
-            var dataReader = command.ExecuteReader();
-
-            if (dataReader.Read())
+            if (category != null)
             {
-                Category category = new Category(
-                    id: (int) dataReader["Id"],
-                    name: (string) dataReader["Name"],
-                    description: (string) dataReader["Description"],
-                    url: (string) dataReader["Url"],
-                    parentCategoryId: (int) (dataReader["ParentCategoryId"] as int?).GetValueOrDefault());
-                
-                connection.Close();
-
                 return category;
             }
             else
             {
-                connection.Close();
-
                 return null;
             }
+
+            //string sql = @"
+            //            SELECT *
+            //            FROM Categorys
+            //            WHERE Name = @CategoryName 
+            //";
+
+            //using var connection = new SqlConnection(connectionString);
+            //using var command = new SqlCommand(sql, connection);
+
+            //command.Parameters.AddWithValue("@CategoryName", categoryName);
+
+            //connection.Open();
+
+            //var dataReader = command.ExecuteReader();
+
+            //if (dataReader.Read())
+            //{
+            //    Category category = new Category(
+            //        id: (int) dataReader["Id"],
+            //        name: (string) dataReader["Name"],
+            //        description: (string) dataReader["Description"],
+            //        url: (string) dataReader["Url"],
+            //        parentCategoryId: (int) (dataReader["ParentCategoryId"] as int?).GetValueOrDefault());
+                
+            //    connection.Close();
+
+            //    return category;
+            //}
+            //else
+            //{
+            //    connection.Close();
+
+            //    return null;
+            //}
         }
 
         private static void SaveCategoryToCategory(Category parentCategory, Category childCategory)
         {
+            //using var context = new ProductManagerContext();
+
+            //var categoryToCategory = 
+
+            //context.Categories.Add(parentCategory);
+
             string sql = @"
                          UPDATE Categorys 
                          SET ParentCategoryId = @Id
