@@ -39,7 +39,7 @@ namespace ProductManager.Models
         public string Url { get; protected set; }
 
         [MaxLength(10)]
-        public int? ParentCategoryId { get; protected set; }
+        public int? ParentCategoryId { get; set; }
 
         [ForeignKey("ParentCategoryId")]
         public Category category { get; protected set; }
