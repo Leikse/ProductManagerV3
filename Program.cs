@@ -23,9 +23,6 @@ namespace ProductManager
 
     class Program
     {
-        // TODO: Remove
-        static string connectionString;
-
         static void Main(string[] args)
         {
             var isAuthenticated = false;
@@ -85,7 +82,6 @@ namespace ProductManager
 
                     case MainMenu.SearchProduct:
                     {
-                        // TODO: Need fixes 
                         ListProduct();
                     }
                         break;
@@ -379,12 +375,6 @@ namespace ProductManager
                                     {
                                         case ConsoleKey.Y:
 
-                                        // TODO: Fix so products delete from category after product to category works
-                                            //foreach (var product in products)
-                                            //{
-                                            //    DeleteCategory(product.Id);
-                                            //}
-
                                             DeleteProduct(articleNumber);
 
                                             WriteLine("Product deleted");
@@ -442,21 +432,6 @@ namespace ProductManager
                 context.SaveChanges();
             }
         }
-
-        // TODO: REmove
-        //private static void DeleteCategory(int productId)
-        //{
-        //    // TODO: Change to EF Core
-        //    using var context = new ProductManagerContext();
-
-        //    var productToRemove = context.CategoryProduct.SingleOrDefault(x => x.ProductId == productId);
-
-        //    if (productToRemove != null)
-        //    {
-        //        context.CategoryProduct.Remove(productToRemove);
-        //        context.SaveChanges();
-        //    }
-        //}
 
         private static IList<Product> FindProductList(string inputArticleNumber)
         {
@@ -603,25 +578,6 @@ namespace ProductManager
             category.Products.Add(product);
 
             context.SaveChanges();
-
-            //string sql = @"INSERT INTO CategoryProduct (
-            //             ProductId,
-            //             CategoryId
-            //             ) VALUES (
-            //             @ProductId,
-            //             @CategoryId)";
-
-            //using SqlConnection connection = new(connectionString);
-            //using SqlCommand command = new(sql, connection);
-
-            //command.Parameters.AddWithValue("@ProductId", product.Id);
-            //command.Parameters.AddWithValue("@CategoryId", category.Id);
-
-            //connection.Open();
-
-            //command.ExecuteNonQuery();
-
-            //connection.Close();
         }
 
         static Category FindCategory(string name)
@@ -632,40 +588,6 @@ namespace ProductManager
                 .FirstOrDefault(x => x.Name == name);
 
             return category;
-
-            //string sql = @"
-            //            SELECT Id,
-            //                   Name,
-            //                   Description,
-            //                   Url,
-            //                   ParentCategoryId
-            //            FROM Categorys
-            //            WHERE Name = @Name
-            //";
-
-            //using var connection = new SqlConnection(connectionString);
-
-            //using var command = new SqlCommand(sql, connection);
-
-            //command.Parameters.AddWithValue("@Name", name);
-
-            //connection.Open();
-
-            //var dataReader = command.ExecuteReader();
-
-            //Category category = null;
-
-            //if (dataReader.Read())
-            //{
-            //    category = new Category(
-            //        id: (int) dataReader["Id"],
-            //        name: (string) dataReader["Name"],
-            //        description: (string) dataReader["Description"],
-            //        url: (string) dataReader["Url"],
-            //        parentCategoryId: (int) (dataReader["ParentCategoryId"] as int?).GetValueOrDefault());
-            //}
-
-            //connection.Close();
         }
 
         static void ListCategories()
@@ -766,8 +688,7 @@ namespace ProductManager
 
             List<Product> childProductsList = new List<Product>();
 
-            // TODO: Fix finding categoryProducts
-            var products = context.Products.FirstOrDefault();
+            var products = context.Products.Include(x => x.Categories).FirstOrDefault(x => x.Id == categoryId);
 
             childProductsList.Add(products);
 
@@ -779,50 +700,6 @@ namespace ProductManager
             {
                 return null;
             }
-
-            return childProductsList;
-
-            //string sql = @"
-            //            SELECT Products.Id,
-            //                   Products.ArticleNumber,
-            //                   Products.Name,
-            //                   Products.Description,
-            //                   Products.Url,
-            //                   Products.Price
-            //            FROM Products
-            //            INNER JOIN CategoryProduct 
-            //                    ON CategoryProduct.ProductId = Products.Id
-            //                 WHERE CategoryProduct.CategoryId = @categoryId
-            //";
-
-            //using var connection = new SqlConnection(connectionString);
-            //using var command = new SqlCommand(sql, connection);
-
-            //command.Parameters.AddWithValue("@category", categoryId);
-
-            //connection.Open();
-
-            //var dataReader = command.ExecuteReader();
-
-            //List<Product> childProductsList = new List<Product>();
-
-            //while (dataReader.Read())
-            //{
-            //    var id = (int)dataReader["Id"];
-            //    var articleNumber = (string)dataReader["ArticleNumber"];
-            //    var name = (string)dataReader["Name"];
-            //    var description = (string)dataReader["Description"];
-            //    var url = (string)dataReader["Url"];
-            //    var price = (int)dataReader["Price"];
-
-            //    Product product = new Product(id, articleNumber, name, description, url, price);
-
-            //    childProductsList.Add(product);
-            //}
-
-            //connection.Close();
-
-            //return childProductsList;
         }
 
         private static List<Category> FindChildCategoriesList(int parentId)
@@ -833,41 +710,9 @@ namespace ProductManager
 
             var childCategory = context.Categories.FirstOrDefault(x => x.ParentCategoryId == parentId);
 
+            if (childCategory == null) return null;
+
             parentCategoryList.Add(childCategory);
-
-            //string sql = @"
-            //            SELECT Id,
-            //                   Name,
-            //                   Description,
-            //                   Url,
-            //                   ParentCategoryId
-            //            FROM Categorys
-            //            WHERE ParentCategoryId = @parentId
-            //";
-
-            //using var connection = new SqlConnection(connectionString);
-            //using var command = new SqlCommand(sql, connection);
-
-            //command.Parameters.AddWithValue("@parentId", parentId);
-
-            //connection.Open();
-
-            //var dataReader = command.ExecuteReader();
-
-            //List<Category> parentCategoryList = new List<Category>();
-
-            //while (dataReader.Read())
-            //{
-            //    var id = (int)dataReader["Id"];
-            //    var name = (string)dataReader["Name"];
-            //    var description = (string)dataReader["Description"];
-            //    var url = (string)dataReader["Url"];
-            //    var parentCategoryId = (int)(dataReader["ParentCategoryId"] as int?).GetValueOrDefault();
-
-            //    Category category = new Category(name, description, url, id, parentCategoryId);
-
-            //    parentCategoryList.Add(category);
-            //}
 
             if (parentCategoryList == null) return null;
 
@@ -880,8 +725,6 @@ namespace ProductManager
                 category.Products = products;
             });
 
-            //connection.Close();
-
             return parentCategoryList;
         }
 
@@ -889,13 +732,13 @@ namespace ProductManager
         {
             using var context = new ProductManagerContext();
 
-            List<Category> rootCategoryList = new List<Category>();
+            var rootCategoryList = context.Categories
+                    .Include(x => x.Products)
+                    .Include(x => x.CategoryInCategory)
+                    .Where(x => x.ParentCategoryId == null)
+                    .ToList();
 
-            var rootCategory = context.Categories.FirstOrDefault(x => (x.Id as int?).GetValueOrDefault() == null);
-
-            rootCategoryList.Add(rootCategory);
-
-            if (rootCategoryList == null)
+            if (rootCategoryList != null)
             {
                 return rootCategoryList;
             }
@@ -903,42 +746,6 @@ namespace ProductManager
             {
                 return null;
             }
-
-            //string sql = @"
-            //            SELECT Id,
-            //                   Name,
-            //                   Description,
-            //                   Url,
-            //                   ParentCategoryId
-            //            FROM Categorys
-            //            WHERE ParentCategoryId IS NULL
-            //";
-
-            //using var connection = new SqlConnection(connectionString);
-            //using var command = new SqlCommand(sql, connection);
-
-            //connection.Open();
-
-            //var dataReader = command.ExecuteReader();
-
-            //List<Category> parentCategoryList = new List<Category>();
-
-            //while (dataReader.Read())
-            //{
-            //    var id = (int)dataReader["Id"];
-            //    var name = (string)dataReader["Name"];
-            //    var description = (string)dataReader["Description"];
-            //    var url = (string)dataReader["Url"];
-            //    var parentCategoryId = (int)(dataReader["ParentCategoryId"] as int?).GetValueOrDefault();
-
-            //    Category category = new Category(name, description, url, id, parentCategoryId);
-
-            //    parentCategoryList.Add(category);
-            //}
-
-            //connection.Close();
-
-            //return parentCategoryList;
         }
 
         private static void AddCategoryToCategory()
@@ -1034,41 +841,6 @@ namespace ProductManager
             {
                 return null;
             }
-
-            //string sql = @"
-            //            SELECT *
-            //            FROM Categorys
-            //            WHERE Name = @CategoryName 
-            //";
-
-            //using var connection = new SqlConnection(connectionString);
-            //using var command = new SqlCommand(sql, connection);
-
-            //command.Parameters.AddWithValue("@CategoryName", categoryName);
-
-            //connection.Open();
-
-            //var dataReader = command.ExecuteReader();
-
-            //if (dataReader.Read())
-            //{
-            //    Category category = new Category(
-            //        id: (int) dataReader["Id"],
-            //        name: (string) dataReader["Name"],
-            //        description: (string) dataReader["Description"],
-            //        url: (string) dataReader["Url"],
-            //        parentCategoryId: (int) (dataReader["ParentCategoryId"] as int?).GetValueOrDefault());
-                
-            //    connection.Close();
-
-            //    return category;
-            //}
-            //else
-            //{
-            //    connection.Close();
-
-            //    return null;
-            //}
         }
 
         private static void SaveCategoryToCategory(Category parentCategory, Category childCategory)
@@ -1083,24 +855,6 @@ namespace ProductManager
 
                 context.SaveChanges();
             }
-
-            //string sql = @"
-            //             UPDATE Categorys 
-            //             SET ParentCategoryId = @Id
-            //             WHERE Id = @childCategory
-            //                            ";
-
-            //using SqlConnection connection = new(connectionString);
-            //using SqlCommand command = new(sql, connection);
-
-            //command.Parameters.AddWithValue("@Id", parentCategory.Id);
-            //command.Parameters.AddWithValue("@childCategory", childCategory.Id);
-
-            //connection.Open();
-
-            //command.ExecuteNonQuery();
-
-            //connection.Close();
         }
     }
 }
