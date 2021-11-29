@@ -8,7 +8,6 @@ namespace ProductManager.Data
         public DbSet<Product> Products { get; set;}
         public DbSet<Category> Categories { get; set;}
         public DbSet<Login> Logins { get; set; }
-        public DbSet<CategoryProduct> CategoryProducts { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

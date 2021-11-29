@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace ProductManager.Models
 {
@@ -22,6 +23,8 @@ namespace ProductManager.Models
 
         [MaxLength(10)]
         public decimal Price { get; protected set; }
+
+        public IList<Category> Categories { get; set; } = new List<Category>();
 
         public Product(int id, string articleNumber, string name, string description, string url, decimal price)
         {

@@ -22,6 +22,21 @@ namespace ProductManager.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
+            modelBuilder.Entity("CategoryProduct", b =>
+                {
+                    b.Property<int>("CategoriesId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CategoriesId", "ProductsId");
+
+                    b.HasIndex("ProductsId");
+
+                    b.ToTable("CategoryProduct");
+                });
+
             modelBuilder.Entity("ProductManager.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -54,21 +69,6 @@ namespace ProductManager.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("ProductManager.Models.CategoryProduct", b =>
-                {
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductId");
-
-                    b.HasIndex("CategoryId");
-
-                    b.ToTable("CategoryProducts");
-                });
-
             modelBuilder.Entity("ProductManager.Models.Login", b =>
                 {
                     b.Property<string>("Username")
@@ -98,9 +98,6 @@ namespace ProductManager.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -120,9 +117,22 @@ namespace ProductManager.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryId");
-
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("CategoryProduct", b =>
+                {
+                    b.HasOne("ProductManager.Models.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProductManager.Models.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ProductManager.Models.Category", b =>
@@ -134,37 +144,9 @@ namespace ProductManager.Migrations
                     b.Navigation("category");
                 });
 
-            modelBuilder.Entity("ProductManager.Models.CategoryProduct", b =>
-                {
-                    b.HasOne("ProductManager.Models.Category", "category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ProductManager.Models.Product", "product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("category");
-
-                    b.Navigation("product");
-                });
-
-            modelBuilder.Entity("ProductManager.Models.Product", b =>
-                {
-                    b.HasOne("ProductManager.Models.Category", null)
-                        .WithMany("ProductInCategory")
-                        .HasForeignKey("CategoryId");
-                });
-
             modelBuilder.Entity("ProductManager.Models.Category", b =>
                 {
                     b.Navigation("CategoryInCategory");
-
-                    b.Navigation("ProductInCategory");
                 });
 #pragma warning restore 612, 618
         }

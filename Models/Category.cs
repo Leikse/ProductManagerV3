@@ -14,7 +14,7 @@ namespace ProductManager.Models
             Id = id;
             ParentCategoryId = parentCategoryId;
             CategoryInCategory = new List<Category>();
-            ProductInCategory = new List<Product>();
+            Products = new List<Product>();
         }
 
         public Category(string name, string description, string url)
@@ -23,7 +23,7 @@ namespace ProductManager.Models
             Description = description;
             Url = url;
             CategoryInCategory = new List<Category>();
-            ProductInCategory = new List<Product>();
+            Products = new List<Product>();
         }
 
         public int Id { get; protected set; }
@@ -42,8 +42,11 @@ namespace ProductManager.Models
         public int? ParentCategoryId { get; set; }
 
         [ForeignKey("ParentCategoryId")]
+        
         public Category category { get; protected set; }
+        
         public List<Category> CategoryInCategory { get; set; }
-        public List<Product> ProductInCategory { get; set; }
+
+        public List<Product> Products { get; set; } = new List<Product>();
     }
 }

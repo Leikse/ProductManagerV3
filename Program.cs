@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using static System.Console;
-using Microsoft.Data.SqlClient;
 using ProductManager.Models;
 using ProductManager.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ProductManager
 {
@@ -288,7 +288,7 @@ namespace ProductManager
         {
             using var context = new ProductManagerContext();
 
-            //context.Products.Add(product);
+            context.Products.Add(product);
 
             context.SaveChanges();
         }
@@ -380,10 +380,10 @@ namespace ProductManager
                                         case ConsoleKey.Y:
 
                                         // TODO: Fix so products delete from category after product to category works
-                                            foreach (var product in products)
-                                            {
-                                                DeleteCategory(product.Id);
-                                            }
+                                            //foreach (var product in products)
+                                            //{
+                                            //    DeleteCategory(product.Id);
+                                            //}
 
                                             DeleteProduct(articleNumber);
 
@@ -443,19 +443,20 @@ namespace ProductManager
             }
         }
 
-        private static void DeleteCategory(int productId)
-        {
-            // TODO: Change to EF Core
-            using var context = new ProductManagerContext();
+        // TODO: REmove
+        //private static void DeleteCategory(int productId)
+        //{
+        //    // TODO: Change to EF Core
+        //    using var context = new ProductManagerContext();
 
-            var productToRemove = context.CategoryProducts.SingleOrDefault(x => x.ProductId == productId);
+        //    var productToRemove = context.CategoryProduct.SingleOrDefault(x => x.ProductId == productId);
 
-            if (productToRemove != null)
-            {
-                context.CategoryProducts.Remove(productToRemove);
-                context.SaveChanges();
-            }
-        }
+        //    if (productToRemove != null)
+        //    {
+        //        context.CategoryProduct.Remove(productToRemove);
+        //        context.SaveChanges();
+        //    }
+        //}
 
         private static IList<Product> FindProductList(string inputArticleNumber)
         {
@@ -594,16 +595,14 @@ namespace ProductManager
 
         private static void SaveProductToCategory(Category category, Product product)
         {
-            // TODO: Doesn't work?
             using var context = new ProductManagerContext();
 
-            CategoryProduct categoryProduct = new CategoryProduct(category.Id, product.Id);
+            context.Categories.Attach(category);
+            context.Products.Attach(product);
 
-            context.CategoryProducts.Add(categoryProduct);
+            category.Products.Add(product);
 
             context.SaveChanges();
-
-
 
             //string sql = @"INSERT INTO CategoryProduct (
             //             ProductId,
@@ -724,7 +723,7 @@ namespace ProductManager
 
         public static void PrintProducts(Category category, int level = 0)
         {
-            var childProducts = category.ProductInCategory;
+            var childProducts = category.Products;
             if (childProducts == null) return;
 
             var spaces = "";
@@ -749,7 +748,7 @@ namespace ProductManager
 
             childCategories.ForEach(category =>
             {
-                var products = category.ProductInCategory;
+                var products = category.Products;
 
                 var numberOfProducts = products.Count();
 
@@ -761,49 +760,69 @@ namespace ProductManager
             return totalProductsCounter;
         }
 
-        private static List<Product> FindProductsForCategories(int category)
+        private static List<Product> FindProductsForCategories(int categoryId)
         {
-            string sql = @"
-                        SELECT Products.Id,
-                               Products.ArticleNumber,
-                               Products.Name,
-                               Products.Description,
-                               Products.Url,
-                               Products.Price
-                        FROM Products
-                        INNER JOIN CategoryProduct 
-                                ON CategoryProduct.ProductId = Products.Id
-                             WHERE CategoryProduct.CategoryId = @category
-            ";
-
-            using var connection = new SqlConnection(connectionString);
-            using var command = new SqlCommand(sql, connection);
-
-            command.Parameters.AddWithValue("@category", category);
-
-            connection.Open();
-
-            var dataReader = command.ExecuteReader();
+            using var context = new ProductManagerContext();
 
             List<Product> childProductsList = new List<Product>();
 
-            while (dataReader.Read())
+            // TODO: Fix finding categoryProducts
+            var products = context.Products.FirstOrDefault();
+
+            childProductsList.Add(products);
+
+            if (products != null)
             {
-                var id = (int)dataReader["Id"];
-                var articleNumber = (string)dataReader["ArticleNumber"];
-                var name = (string)dataReader["Name"];
-                var description = (string)dataReader["Description"];
-                var url = (string)dataReader["Url"];
-                var price = (int)dataReader["Price"];
-
-                Product product = new Product(id, articleNumber, name, description, url, price);
-
-                childProductsList.Add(product);
+                return childProductsList;
+            }
+            else
+            {
+                return null;
             }
 
-            connection.Close();
-
             return childProductsList;
+
+            //string sql = @"
+            //            SELECT Products.Id,
+            //                   Products.ArticleNumber,
+            //                   Products.Name,
+            //                   Products.Description,
+            //                   Products.Url,
+            //                   Products.Price
+            //            FROM Products
+            //            INNER JOIN CategoryProduct 
+            //                    ON CategoryProduct.ProductId = Products.Id
+            //                 WHERE CategoryProduct.CategoryId = @categoryId
+            //";
+
+            //using var connection = new SqlConnection(connectionString);
+            //using var command = new SqlCommand(sql, connection);
+
+            //command.Parameters.AddWithValue("@category", categoryId);
+
+            //connection.Open();
+
+            //var dataReader = command.ExecuteReader();
+
+            //List<Product> childProductsList = new List<Product>();
+
+            //while (dataReader.Read())
+            //{
+            //    var id = (int)dataReader["Id"];
+            //    var articleNumber = (string)dataReader["ArticleNumber"];
+            //    var name = (string)dataReader["Name"];
+            //    var description = (string)dataReader["Description"];
+            //    var url = (string)dataReader["Url"];
+            //    var price = (int)dataReader["Price"];
+
+            //    Product product = new Product(id, articleNumber, name, description, url, price);
+
+            //    childProductsList.Add(product);
+            //}
+
+            //connection.Close();
+
+            //return childProductsList;
         }
 
         private static List<Category> FindChildCategoriesList(int parentId)
@@ -858,7 +877,7 @@ namespace ProductManager
                 category.CategoryInCategory = parentCategoryList;
 
                 var products = FindProductsForCategories(category.Id);
-                category.ProductInCategory = products;
+                category.Products = products;
             });
 
             //connection.Close();
@@ -1057,6 +1076,7 @@ namespace ProductManager
             using var context = new ProductManagerContext();
 
             var categoryToCategory = context.Categories.SingleOrDefault(x => x.Id == childCategory.Id);
+
             if (categoryToCategory != null)
             { 
                 categoryToCategory.ParentCategoryId = parentCategory.Id;
