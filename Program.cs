@@ -299,6 +299,12 @@ namespace ProductManager
             
             var products = FindProductList(articleNumber);
 
+            if (products == null)
+            {
+                WriteLine("Could not find product");
+                return;
+            }
+
             var productNotExists = products == null;
 
             var isRunning = true;
@@ -437,9 +443,18 @@ namespace ProductManager
         {
             using var context = new ProductManagerContext();
 
-            var productList = context.Products.ToList();
+            var productList = context.Products
+                .Where(x => x.ArticleNumber == inputArticleNumber)
+                .ToList();
 
-            return productList;
+            if (productList.Count > 0 || productList != null)
+            {
+                return productList;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         static void AddCategory()
@@ -672,11 +687,14 @@ namespace ProductManager
             {
                 var products = category.Products;
 
-                var numberOfProducts = products.Count();
+                if (products != null)
+                {
+                    var numberOfProducts = products.Count();
 
-                var numberOfChildProducts = FindAmountOfProducts(category);
+                    var numberOfChildProducts = FindAmountOfProducts(category);
 
-                totalProductsCounter += numberOfProducts + numberOfChildProducts;
+                    totalProductsCounter += numberOfProducts + numberOfChildProducts;
+                }
             });
 
             return totalProductsCounter;
@@ -688,11 +706,20 @@ namespace ProductManager
 
             List<Product> childProductsList = new List<Product>();
 
-            var products = context.Products.Include(x => x.Categories).FirstOrDefault(x => x.Id == categoryId);
+            var categories = context.Categories
+                    .Include(x => x.Products)
+                    .Include(x => x.CategoryInCategory)
+                    .Where(x => x.Id == categoryId).ToList();
 
-            childProductsList.Add(products);
+            foreach (var category in categories)
+            {
+                foreach (var product in category.Products)
+                {
+                    childProductsList.Add(product);
+                }
+            }
 
-            if (products != null)
+            if (childProductsList != null)
             {
                 return childProductsList;
             }
@@ -708,11 +735,14 @@ namespace ProductManager
 
             List<Category> parentCategoryList = new List<Category>();
 
-            var childCategory = context.Categories.FirstOrDefault(x => x.ParentCategoryId == parentId);
+            //var childCategory = context.Categories.FirstOrDefault(x => x.ParentCategoryId == parentId);
 
-            if (childCategory == null) return null;
+            parentCategoryList = context.Categories.Where(x => x.ParentCategoryId == parentId).ToList();
 
-            parentCategoryList.Add(childCategory);
+            //if (childCategory != null)
+            //{
+            //    parentCategoryList.Add(childCategory);
+            //}
 
             if (parentCategoryList == null) return null;
 

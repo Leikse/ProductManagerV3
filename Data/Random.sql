@@ -13,6 +13,8 @@ VALUES
 ('Kläder', 'Blå', 'Blå'),
 ('Tröjor', 'Grön', 'Grön')
 
-DELETE FROM Products WHERE Id = '7'
+DELETE FROM Products WHERE Id = '5'
 
-DELETE FROM CategoryProduct WHERE ProductId = '7'
+DELETE FROM CategoryProduct WHERE ProductsId = '6'
+
+DELETE FROM Categories WHERE Id = '7'
