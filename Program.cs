@@ -312,17 +312,23 @@ namespace ProductManager
 
         static void ListProduct()
         {
+            CursorVisible = true;
+
             Write("Article number: ");
 
             var articleNumber = ReadLine();
 
             Clear();
-            
+
             var products = FindProductList(articleNumber);
 
-            if (products == null)
+            if (products == null || products.Count <= 0)
             {
+                CursorVisible = false;
+
                 WriteLine("Could not find product");
+
+                Thread.Sleep(3000);
                 return;
             }
 
@@ -474,6 +480,7 @@ namespace ProductManager
             }
             else
             {
+                Console.Write("Couldn't find product");
                 return null;
             }
         }
