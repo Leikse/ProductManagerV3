@@ -5,6 +5,7 @@ using System.Threading;
 using static System.Console;
 using ProductManager.Models;
 using ProductManager.Data;
+using System.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace ProductManager
@@ -156,7 +157,27 @@ namespace ProductManager
 
                 WriteLine("\nPassword: ");
 
-                var password = ReadLine();
+                var password = string.Empty;
+
+                ConsoleKey key;
+
+                do
+                {
+                    var keyInfo = Console.ReadKey(intercept: true);
+                    key = keyInfo.Key;
+
+                    if (key == ConsoleKey.Backspace && password.Length > 0)
+                    {
+                        Console.Write("\b \b");
+                        password = password[0..^1];
+                    }
+                    else if (!char.IsControl(keyInfo.KeyChar))
+                    {
+                        Console.Write("*");
+                        password += keyInfo.KeyChar;
+                    }
+                }
+                while (key != ConsoleKey.Enter);
 
                 Login login = FindLogin(username);
 
